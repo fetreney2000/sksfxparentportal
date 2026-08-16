@@ -7,7 +7,6 @@ export function useAdminAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const setSession = useAuthStore((s) => s.setSession);
-  const reset = useAuthStore((s) => s.reset);
   const navigate = useNavigate();
 
   const login = useCallback(
@@ -16,31 +15,24 @@ export function useAdminAuth() {
       setIsLoading(true);
       try {
         const result = await signInAdmin(username, password);
-        if ("error" in result) {
+        if (!result.ok) {
           setError(result.error);
           return { ok: false, error: result.error };
         }
-        // Supabase listener akan set session; kita tetapkan role awal
-        setSession(null, "admin");
         navigate("/admin", { replace: true });
         return { ok: true };
       } finally {
         setIsLoading(false);
       }
     },
-    [navigate, setSession]
+    [navigate]
   );
 
   const logout = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await signOut();
-      reset();
-      navigate("/admin/login", { replace: true });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [navigate, reset]);
+    signOut();
+    setSession(null);
+    navigate("/admin/login", { replace: true });
+  }, [navigate, setSession]);
 
-  return { login, logout, isLoading, error, setError };
+  return { login, logout, isLoading, error };
 }

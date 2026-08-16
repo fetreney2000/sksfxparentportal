@@ -1,14 +1,19 @@
 -- =====================================================================
 -- Portal Ibu Bapa SK St. Francis Xavier Keningau
 -- Skema pangkalan data (Supabase / PostgreSQL)
--- Fasa 1: jadual asas + trigger updated_at
+--
+-- NOTA: Projek ini TIDAK menggunakan Supabase Auth / auth.users untuk
+-- menyimpan data pengguna. Pengesahan dikendalikan sepenuhnya secara
+-- tersuai (lihat migration 0002) berdasarkan jadual `admins` untuk admin
+-- dan jadual `students` (padan `delima_id`) untuk ibu bapa/penjaga.
 -- =====================================================================
 
--- Dayakan extension untuk gen_random_uuid()
+-- Dayakan extension yang diperlukan (uuid, hash, token).
 create extension if not exists "pgcrypto";
 
 -- ---------------------------------------------------------------------
 -- Jadual: students (pelajar / rekod DELIMA)
+-- delima_id berfungsi sebagai "kunci log masuk" ibu bapa (tanpa kata laluan)
 -- ---------------------------------------------------------------------
 create table if not exists public.students (
   id uuid primary key default gen_random_uuid(),
@@ -26,36 +31,18 @@ create index if not exists idx_students_kelas on public.students(kelas);
 create index if not exists idx_students_nama on public.students(nama);
 
 -- ---------------------------------------------------------------------
--- Jadual: guardians (penjaga / ibu bapa)
--- ---------------------------------------------------------------------
-create table if not exists public.guardians (
-  id uuid primary key default gen_random_uuid(),
-  email text not null unique,
-  nama text,
-  created_at timestamptz not null default now()
-);
-
--- ---------------------------------------------------------------------
--- Jadual perhubungan: guardian_student
--- ---------------------------------------------------------------------
-create table if not exists public.guardian_student (
-  guardian_id uuid not null references public.guardians(id) on delete cascade,
-  student_id uuid not null references public.students(id) on delete cascade,
-  hubungan text,
-  primary key (guardian_id, student_id)
-);
-
-create index if not exists idx_gs_student on public.guardian_student(student_id);
-
--- ---------------------------------------------------------------------
--- Jadual: admins (admin portal)
+-- Jadual: admins (pentadbir portal)
+-- Kredensial (username + kata laluan) disimpan TERUS di sini.
+-- Password disimpan sebagai hash (pgcrypto crypt/salt).
+-- NOTA: Tiada auth_user_id / auth.users.
 -- ---------------------------------------------------------------------
 create table if not exists public.admins (
   id uuid primary key default gen_random_uuid(),
   username text not null unique,
-  auth_user_id uuid not null unique references auth.users(id) on delete cascade,
+  password_hash text not null,
   nama text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 -- ---------------------------------------------------------------------
@@ -76,6 +63,24 @@ create index if not exists idx_import_logs_created_at
   on public.import_logs(created_at desc);
 
 -- ---------------------------------------------------------------------
+-- Jadual: app_config (kunci/rahsia aplikasi, contoh: rahsia token sesi)
+-- Hanya boleh diakses melalui fungsi (tidak terus oleh client).
+-- ---------------------------------------------------------------------
+create table if not exists public.app_config (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+
+-- Seed rahsia untuk tanda tangan token sesi (jika belum wujud)
+insert into public.app_config (key, value)
+values (
+  'session_secret',
+  encode(gen_random_bytes(32), 'hex')
+)
+on conflict (key) do nothing;
+
+-- ---------------------------------------------------------------------
 -- Trigger: kemas kini updated_at automatik
 -- ---------------------------------------------------------------------
 create or replace function public.set_updated_at()
@@ -91,4 +96,9 @@ $$;
 drop trigger if exists trg_students_updated_at on public.students;
 create trigger trg_students_updated_at
 before update on public.students
+for each row execute function public.set_updated_at();
+
+drop trigger if exists trg_admins_updated_at on public.admins;
+create trigger trg_admins_updated_at
+before update on public.admins
 for each row execute function public.set_updated_at();

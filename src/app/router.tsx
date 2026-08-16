@@ -20,7 +20,7 @@ export function AppRouter() {
       <Route
         path="/portal"
         element={
-          <ProtectedRoute role="parent">
+          <ProtectedRoute role="guardian">
             <ParentLayout />
           </ProtectedRoute>
         }

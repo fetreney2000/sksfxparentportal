@@ -1,56 +1,57 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Session, User } from "@supabase/supabase-js";
+import type { StudentRow } from "@/features/delima-info/api";
 
-export type AppRole = "parent" | "admin";
+export type AppRole = "guardian" | "admin";
+
+export interface AppSession {
+  token: string;
+  role: AppRole;
+  /** Admin sahaja */
+  username?: string;
+  name?: string;
+  /** Guardian sahaja — ID DELIMA anak jagaan */
+  delimaId?: string;
+  student?: StudentRow | null;
+}
 
 export interface AuthState {
-  session: Session | null;
-  user: User | null;
-  role: AppRole | null;
-  /** Status muat-naik session awal */
+  session: AppSession | null;
   status: "loading" | "unauthenticated" | "authenticated";
 
-  setSession: (session: Session | null, role: AppRole | null) => void;
+  setSession: (session: AppSession | null) => void;
   setStatus: (status: AuthState["status"]) => void;
-  reset: () => void;
+  clear: () => void;
 
-  isParent: () => boolean;
   isAdmin: () => boolean;
+  isGuardian: () => boolean;
+  getToken: () => string | null;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       session: null,
-      user: null,
-      role: null,
       status: "loading",
 
-      setSession: (session, role) =>
+      setSession: (session) =>
         set({
           session,
-          user: session?.user ?? null,
-          role,
           status: session ? "authenticated" : "unauthenticated",
         }),
 
       setStatus: (status) => set({ status }),
 
-      reset: () =>
-        set({
-          session: null,
-          user: null,
-          role: null,
-          status: "unauthenticated",
-        }),
+      clear: () =>
+        set({ session: null, status: "unauthenticated" }),
 
-      isParent: () => get().role === "parent",
-      isAdmin: () => get().role === "admin",
+      isAdmin: () => get().session?.role === "admin",
+      isGuardian: () => get().session?.role === "guardian",
+      getToken: () => get().session?.token ?? null,
     }),
     {
       name: "sfxk-auth",
-      partialize: (s) => ({ session: s.session, user: s.user, role: s.role }),
+      partialize: (s) => ({ session: s.session }),
     }
   )
 );

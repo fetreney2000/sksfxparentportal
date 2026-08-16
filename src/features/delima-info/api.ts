@@ -1,145 +1,154 @@
 import { supabase } from "@/lib/supabaseClient";
-import type { Delima, DelimaFormValues } from "./types";
+import { useAuthStore } from "@/stores/authStore";
+import type { DelimaFormValues } from "./types";
 
-export interface DelimaRow extends Delima {
+export interface StudentRow extends DelimaFormValues {
+  id: string;
   created_at: string;
   updated_at: string;
 }
 
-/**
- * Dapatkan senarai semua pelajar (admin sahaja, RLS menyekat parent).
- */
-export async function fetchAllDelima(): Promise<DelimaRow[]> {
-  const { data, error } = await supabase
-    .from("students")
-    .select("*")
-    .order("tahun", { ascending: true })
-    .order("kelas", { ascending: true })
-    .order("nama", { ascending: true });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as DelimaRow[];
+export interface ImportLogRow {
+  id: string;
+  imported_by: string | null;
+  filename: string | null;
+  total_rows: number | null;
+  success_rows: number | null;
+  failed_rows: number | null;
+  error_detail: unknown;
+  created_at: string;
+}
+
+type FailedResult = { success: number; failed: number; errors: { row: number; error: string }[] };
+
+function getToken(): string | null {
+  return useAuthStore.getState().getToken();
+}
+
+function authError(): never {
+  throw new Error("Sesi tidak sah atau telah tamat tempoh. Sila log masuk semula.");
 }
 
 /**
- * Dapatkan senarai anak jagaan untuk ibu bapa yang sedang log masuk.
- * RLS akan tapis supaya hanya anak sendiri dipaparkan.
+ * Ibu bapa: dapatkan maklumat pelajar sendiri (token guardian / delima_id).
  */
-export async function fetchChildrenForCurrentGuardian(): Promise<DelimaRow[]> {
-  const { data, error } = await supabase
-    .from("students")
-    .select("*, guardian_student!inner(guardian_id, guardians!inner(email))")
-    .order("nama", { ascending: true });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as DelimaRow[];
+export async function fetchGuardianStudent(): Promise<StudentRow> {
+  const token = getToken();
+  if (!token) authError();
+  const { data, error } = await supabase.rpc("get_guardian_student", { p_token: token });
+  if (error) throw new Error("Tidak dapat memuatkan maklumat pelajar.");
+  if (!data || data.length === 0) {
+    throw new Error("Tiada rekod pelajar untuk ID DELIMA ini.");
+  }
+  return data[0] as StudentRow;
 }
 
 /**
- * Dapatkan senarai ID Delima sedia ada (untuk pengesahan import).
+ * Admin: senarai semua pelajar.
+ */
+export async function fetchAllDelima(): Promise<StudentRow[]> {
+  const token = getToken();
+  if (!token) authError();
+  const { data, error } = await supabase.rpc("list_students_admin", { p_token: token });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as StudentRow[];
+}
+
+/**
+ * Admin: senarai ID Delima sedia ada (untuk pengesahan import).
  */
 export async function fetchExistingDelimaIds(): Promise<Set<string>> {
-  const { data, error } = await supabase
-    .from("students")
-    .select("delima_id");
+  const token = getToken();
+  if (!token) authError();
+  const { data, error } = await supabase.rpc("list_student_ids_admin", { p_token: token });
   if (error) throw new Error(error.message);
-  return new Set((data ?? []).map((r) => r.delima_id));
+  return new Set((data ?? []).map((v: unknown) => String(v)));
 }
 
 /**
- * Tambah rekod DELIMA baharu.
+ * Admin: tambah rekod baharu.
  */
-export async function createDelima(values: DelimaFormValues): Promise<DelimaRow> {
-  const { data, error } = await supabase
-    .from("students")
-    .insert(values)
-    .select()
-    .single();
+export async function createDelima(values: DelimaFormValues): Promise<void> {
+  const token = getToken();
+  if (!token) authError();
+  const { error } = await supabase.rpc("create_student_admin", {
+    p_token: token,
+    p_delima_id: values.delima_id,
+    p_nama: values.nama,
+    p_tahun: values.tahun,
+    p_kelas: values.kelas,
+    p_kata_laluan: values.kata_laluan,
+  });
   if (error) throw new Error(error.message);
-  return data as DelimaRow;
 }
 
 /**
- * Kemas kini rekod DELIMA berdasarkan id.
+ * Admin: kemas kini rekod.
  */
 export async function updateDelima(
   id: string,
   values: DelimaFormValues
-): Promise<DelimaRow> {
-  const { data, error } = await supabase
-    .from("students")
-    .update(values)
-    .eq("id", id)
-    .select()
-    .single();
+): Promise<void> {
+  const token = getToken();
+  if (!token) authError();
+  const { error } = await supabase.rpc("update_student_admin", {
+    p_token: token,
+    p_id: id,
+    p_delima_id: values.delima_id,
+    p_nama: values.nama,
+    p_tahun: values.tahun,
+    p_kelas: values.kelas,
+    p_kata_laluan: values.kata_laluan,
+  });
   if (error) throw new Error(error.message);
-  return data as DelimaRow;
 }
 
 /**
- * Padam rekod DELIMA berdasarkan id.
+ * Admin: padam rekod.
  */
 export async function deleteDelima(id: string): Promise<void> {
-  const { error } = await supabase.from("students").delete().eq("id", id);
+  const token = getToken();
+  if (!token) authError();
+  const { error } = await supabase.rpc("delete_student_admin", {
+    p_token: token,
+    p_id: id,
+  });
   if (error) throw new Error(error.message);
 }
 
 /**
- * Semak sama ada delima_id sudah wujud (untuk pengesahan unik di borang).
- */
-export async function checkDelimaIdExists(
-  delimaId: string,
-  excludeId?: string
-): Promise<boolean> {
-  let q = supabase
-    .from("students")
-    .select("id")
-    .eq("delima_id", delimaId);
-  if (excludeId) q = q.neq("id", excludeId);
-  const { data, error } = await q.maybeSingle();
-  if (error) return false;
-  return Boolean(data);
-}
-
-/**
- * Insert/upsert berkelompok.
+ * Admin: insert/upsert berkelompok.
  */
 export async function batchUpsertDelima(
   rows: DelimaFormValues[],
   conflictStrategy: "upsert" | "skip"
-): Promise<{ success: number; failed: number; errors: { row: number; error: string }[] }> {
-  let success = 0;
-  const failed: { row: number; error: string }[] = [];
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    try {
-      if (conflictStrategy === "upsert") {
-        const { error } = await supabase
-          .from("students")
-          .upsert(row, { onConflict: "delima_id" });
-        if (error) throw new Error(error.message);
-        success++;
-      } else {
-        // skip: cuba insert; jika conflict, abaikan
-        const { error } = await supabase.from("students").insert(row);
-        if (error) {
-          if (error.code === "23505") {
-            // duplicate — skip
-            continue;
-          }
-          throw new Error(error.message);
-        }
-        success++;
-      }
-    } catch (e) {
-      failed.push({ row: i, error: e instanceof Error ? e.message : String(e) });
-    }
-  }
-
-  return { success, failed: failed.length, errors: failed };
+): Promise<FailedResult> {
+  const token = getToken();
+  if (!token) authError();
+  const { data, error } = await supabase.rpc("batch_upsert_students_admin", {
+    p_token: token,
+    p_rows: JSON.stringify(rows),
+    p_conflict: conflictStrategy,
+  });
+  if (error) throw new Error(error.message);
+  const ok = data && typeof data === "object" && "success" in data
+    ? (data as { success: number; failed: number; errors?: unknown[] })
+    : { success: 0, failed: 0, errors: [] };
+  return {
+    success: ok.success,
+    failed: ok.failed,
+    errors:
+      ok.failed > 0 && Array.isArray(ok.errors)
+        ? ok.errors.map((e, i) => ({
+            row: i,
+            error: typeof e === "object" && e && "error" in e ? String((e as { error: unknown }).error) : String(e),
+          }))
+        : [],
+  };
 }
 
 /**
- * Log import ke jadual import_logs.
+ * Admin: log import.
  */
 export async function logImport(params: {
   filename: string;
@@ -148,50 +157,28 @@ export async function logImport(params: {
   failedRows: number;
   errorDetail?: unknown;
 }): Promise<void> {
-  // imported_by boleh null jika context admin tiada
-  let importedBy: string | null = null;
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      const { data: adm } = await supabase
-        .from("admins")
-        .select("id")
-        .eq("auth_user_id", user.id)
-        .maybeSingle();
-      importedBy = adm?.id ?? null;
-    }
-  } catch {
-    // abaikan
-  }
-
-  await supabase.from("import_logs").insert({
-    imported_by: importedBy,
-    filename: params.filename,
-    total_rows: params.totalRows,
-    success_rows: params.successRows,
-    failed_rows: params.failedRows,
-    error_detail: params.errorDetail ?? null,
+  const token = getToken();
+  if (!token) authError();
+  const { error } = await supabase.rpc("log_import", {
+    p_token: token,
+    p_filename: params.filename,
+    p_total: params.totalRows,
+    p_success: params.successRows,
+    p_failed: params.failedRows,
+    p_error: params.errorDetail ?? null,
   });
+  if (error) throw new Error(error.message);
 }
 
-export async function fetchImportLogs(): Promise<
-  Array<{
-    id: string;
-    filename: string | null;
-    total_rows: number | null;
-    success_rows: number | null;
-    failed_rows: number | null;
-    created_at: string;
-    imported_by: string | null;
-  }>
-> {
-  const { data, error } = await supabase
-    .from("import_logs")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(100);
+/**
+ * Admin: sejarah import.
+ */
+export async function fetchImportLogs(): Promise<ImportLogRow[]> {
+  const token = getToken();
+  if (!token) authError();
+  const { data, error } = await supabase.rpc("list_import_logs_admin", {
+    p_token: token,
+  });
   if (error) throw new Error(error.message);
-  return (data ?? []) as never;
+  return (data ?? []) as ImportLogRow[];
 }

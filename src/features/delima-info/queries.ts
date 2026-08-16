@@ -1,23 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   batchUpsertDelima,
-  checkDelimaIdExists,
   createDelima,
   deleteDelima,
   fetchAllDelima,
-  fetchChildrenForCurrentGuardian,
   fetchExistingDelimaIds,
+  fetchGuardianStudent,
   fetchImportLogs,
   logImport,
   updateDelima,
-  type DelimaRow,
 } from "./api";
 import type { DelimaFormValues } from "./types";
 
 export const delimaKeys = {
   all: ["delima"] as const,
   list: () => [...delimaKeys.all, "list"] as const,
-  children: () => [...delimaKeys.all, "children"] as const,
+  guardian: () => [...delimaKeys.all, "guardian"] as const,
   importLogs: () => [...delimaKeys.all, "import-logs"] as const,
 };
 
@@ -28,10 +26,10 @@ export function useDelimaList() {
   });
 }
 
-export function useDelimaChildren() {
+export function useGuardianStudent() {
   return useQuery({
-    queryKey: delimaKeys.children(),
-    queryFn: fetchChildrenForCurrentGuardian,
+    queryKey: delimaKeys.guardian(),
+    queryFn: fetchGuardianStudent,
   });
 }
 
@@ -63,13 +61,6 @@ export function useDeleteDelima() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: delimaKeys.all });
     },
-  });
-}
-
-export function useCheckDelimaId() {
-  return useMutation({
-    mutationFn: ({ delimaId, excludeId }: { delimaId: string; excludeId?: string }) =>
-      checkDelimaIdExists(delimaId, excludeId),
   });
 }
 
@@ -114,4 +105,4 @@ export function useExistingDelimaIds() {
   });
 }
 
-export type { DelimaRow };
+export type { StudentRow as DelimaRow } from "./api";

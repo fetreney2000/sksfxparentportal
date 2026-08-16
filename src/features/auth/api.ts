@@ -1,121 +1,65 @@
 import { supabase } from "@/lib/supabaseClient";
-import type { AppRole } from "@/stores/authStore";
+import { useAuthStore, type AppRole } from "@/stores/authStore";
+import type { StudentRow } from "@/features/delima-info/api";
 
-/**
- * Semak sama ada auth user adalah admin berdasarkan jadual admins.
- * Digunakan untuk AuthProvider + ProtectedRoute.
- */
-export async function checkAdminRole(authUserId: string): Promise<boolean> {
-  try {
-    const { data, error } = await supabase
-      .from("admins")
-      .select("id")
-      .eq("auth_user_id", authUserId)
-      .maybeSingle();
-    if (error) return false;
-    return Boolean(data);
-  } catch {
-    return false;
-  }
+interface AuthFail {
+  ok: false;
+  error: string;
 }
-
-/**
- * Semak sama ada e-mel wujud dalam jadual guardians (tanpa mendedahkan data lain).
- * Ibu bapa mesti berdaftar dulu sebelum boleh log masuk.
- */
-export async function isGuardianEmailRegistered(email: string): Promise<boolean> {
-  const normalized = email.trim().toLowerCase();
-  try {
-    const { data, error } = await supabase
-      .from("guardians")
-      .select("id")
-      .eq("email", normalized)
-      .maybeSingle();
-    if (error) return false;
-    return Boolean(data);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Dapatkan mapping username admin → e-mel sintetik Supabase.
- * Konvensyen: <username>@admin.sfxkeningau.internal
- */
-export function buildAdminEmail(username: string): string {
-  const clean = username.trim().toLowerCase();
-  return `${clean}@admin.sfxkeningau.internal`;
+interface AuthOk<T extends AppRole = AppRole> {
+  ok: true;
+  role: T;
 }
 
 /**
  * Log masuk admin menggunakan username + kata laluan.
+ * Kredensial disimpan dalam jadual `admins` (bukan Supabase Auth).
  */
 export async function signInAdmin(
   username: string,
   password: string
-): Promise<{ role: AppRole } | { error: string }> {
-  const email = buildAdminEmail(username);
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+): Promise<AuthFail | AuthOk<"admin">> {
+  const { data, error } = await supabase.rpc("authenticate_admin", {
+    p_username: username,
+    p_password: password,
   });
-  if (error || !data.session) {
-    return { error: "Nama pengguna atau kata laluan salah." };
+  if (error || !data || !data.ok) {
+    return { ok: false, error: data?.error ?? "Nama pengguna atau kata laluan salah." };
   }
-  // Pastikan pengguna sememangnya admin
-  const ok = await checkAdminRole(data.user.id);
-  if (!ok) {
-    await supabase.auth.signOut();
-    return { error: "Akaun ini bukan akaun pentadbir." };
-  }
-  return { role: "admin" };
-}
-/**
- * Hantar OTP ke e-mel penjaga.
- * PRA-SEMAK: e-mel mesti wujud dalam jadual guardians.
- */
-export async function sendGuardianOtp(
-  email: string
-): Promise<{ ok: true } | { error: string }> {
-  const normalized = email.trim().toLowerCase();
-  const registered = await isGuardianEmailRegistered(normalized);
-  if (!registered) {
-    return { error: "auth.emailNotRegistered" };
-  }
-  const { error } = await supabase.auth.signInWithOtp({
-    email: normalized,
-    options: {
-      shouldCreateUser: false,
-    },
+  useAuthStore.getState().setSession({
+    token: data.token,
+    role: "admin",
+    username: data.username,
+    name: data.name,
   });
-  if (error) {
-    return { error: error.message };
-  }
-  return { ok: true };
+  return { ok: true, role: "admin" };
 }
 
 /**
- * Sahkan OTP dan log masuk.
+ * Log masuk ibu bapa/penjaga menggunakan ID DELIMA anak (tiada kata laluan).
+ * ID DELIMA berfungsi sebagai kredensial — dikenali oleh pihak sekolah.
  */
-export async function verifyGuardianOtp(
-  email: string,
-  token: string
-): Promise<{ ok: true } | { error: string }> {
-  const normalized = email.trim().toLowerCase();
-  const { data, error } = await supabase.auth.verifyOtp({
-    email: normalized,
-    token,
-    type: "email",
+export async function signInGuardian(
+  delimaId: string
+): Promise<AuthFail | AuthOk<"guardian">> {
+  const { data, error } = await supabase.rpc("login_guardian", {
+    p_delima_id: delimaId,
   });
-  if (error || !data.session) {
-    return { error: error?.message || "Kod pengesahan tidak sah." };
+  if (error || !data || !data.ok) {
+    return { ok: false, error: data?.error ?? "ID DELIMA tidak dijumpai." };
   }
-  return { ok: true };
+  useAuthStore.getState().setSession({
+    token: data.token,
+    role: "guardian",
+    delimaId: String(data.student?.delima_id ?? delimaId),
+    student: (data.student as StudentRow) ?? null,
+  });
+  return { ok: true, role: "guardian" };
 }
 
 /**
- * Log keluar (semua peranan).
+ * Log keluar (2 jenis peranan) — kosongkan sesi tempatan sahaja.
  */
-export async function signOut(): Promise<void> {
-  await supabase.auth.signOut();
+export function signOut(): void {
+  useAuthStore.getState().clear();
 }

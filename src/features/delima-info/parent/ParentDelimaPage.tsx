@@ -1,4 +1,4 @@
-import { useDelimaChildren } from "../queries";
+import { useGuardianStudent } from "../queries";
 import { DelimaCard } from "./DelimaCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -6,11 +6,11 @@ import { ErrorState } from "@/components/common/ErrorState";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/stores/authStore";
 import { bm } from "@/lib/i18n";
-import { Users } from "lucide-react";
+import { User } from "lucide-react";
 
 export function ParentDelimaPage() {
-  const { data, isLoading, isError, refetch } = useDelimaChildren();
-  const user = useAuthStore((s) => s.user);
+  const { data, isLoading, isError, refetch } = useGuardianStudent();
+  const session = useAuthStore((s) => s.session);
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -26,38 +26,34 @@ export function ParentDelimaPage() {
     );
   }
 
-  const list = data ?? [];
-
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{bm.delima.moduleName}</h1>
         <p className="text-sm text-muted-foreground">
-          {user?.email}
+          ID DELIMA: {session?.delimaId ?? "-"}
         </p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="h-4 w-4" /> {bm.delima.myChildren}
+            <User className="h-4 w-4" /> {bm.delima.myChildren}
           </CardTitle>
           <CardDescription>
-            Senarai anak jagaan anda yang berdaftar dengan sekolah.
+            Maklumat anak jagaan anda yang berdaftar dengan ID DELIMA ini.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {list.length === 0 ? (
+          {data ? (
+            <div className="grid gap-3 sm:grid-cols-1">
+              <DelimaCard student={data} />
+            </div>
+          ) : (
             <EmptyState
               title={bm.delima.noChildren}
-              description="Hubungi pihak sekolah untuk mengemas kini rekod."
+              description="Hubungi pihak sekolah untuk mengemaskini rekod."
             />
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {list.map((s) => (
-                <DelimaCard key={s.id} student={s} />
-              ))}
-            </div>
           )}
         </CardContent>
       </Card>

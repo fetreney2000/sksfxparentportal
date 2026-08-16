@@ -27,7 +27,6 @@ import { bm } from "@/lib/i18n";
 import { delimaFormSchema, type DelimaFormValues } from "../types";
 import { TAHUN_SUGGESTIONS } from "../types";
 import {
-  useCheckDelimaId,
   useCreateDelima,
   useDelimaList,
   useUpdateDelima,
@@ -49,7 +48,6 @@ export function DelimaFormDialog({
   const { data: allStudents } = useDelimaList();
   const createMut = useCreateDelima();
   const updateMut = useUpdateDelima();
-  const checkId = useCheckDelimaId();
 
   // Bina pilihan kelas secara dinamik dari data sedia ada
   const kelasOptions = Array.from(
@@ -96,12 +94,11 @@ export function DelimaFormDialog({
 
   const onSubmit = async (values: DelimaFormValues) => {
     try {
-      // Validasi unik
-      const exists = await checkId.mutateAsync({
-        delimaId: values.delima_id,
-        excludeId: initial?.id,
-      });
-      if (exists) {
+      // Validasi unik (client-side dari data yang dimuatkan)
+      const duplicate = (allStudents ?? []).some(
+        (s) => s.delima_id === values.delima_id && s.id !== initial?.id
+      );
+      if (duplicate) {
         form.setError("delima_id", { message: bm.delima.duplicateDelimaId });
         return;
       }

@@ -13,10 +13,61 @@ Modul pertama yang dibina: **Informasi ID DELIMA**.
 - Zustand (state)
 - Tailwind CSS v4
 - shadcn/ui (komponen UI, disesuaikan)
-- Supabase (auth + Postgres + RLS)
+- Supabase (Postgres + fungsi RPC)
 - `xlsx` (SheetJS) untuk import Excel
 - `vite-plugin-pwa` (PWA)
 - `date-fns` + `date-fns-tz` (zon waktu Asia/Kuala_Lumpur)
+
+## Pengesahan (Auth)
+
+Projek ini **TIDAK menggunakan Supabase Auth / `auth.users`** untuk menyimpan
+data pengguna. Pengesahan dikendalikan sepenuhnya secara tersuai:
+
+- **Pentadbir** — log masuk menggunakan **nama pengguna + kata laluan**,
+  yang disimpan terus dalam jadual `admins` (kata laluan di-hash dengan
+  `pgcrypto crypt`). Tiada e-mel; username ialah teks biasa (cth: `admin`).
+- **Ibu Bapa/Penjaga** — log masuk menggunakan **ID DELIMA anak** tanpa kata
+  laluan. ID DELIMA (contoh: `m-15247730@moe-dl.edu.my`) ialah kredensial
+  yang diberikan kepada ibu bapa oleh pihak sekolah. Tiada jadual `guardians`
+  berasingan.
+
+### Bagaimana ia berfungsi
+
+1. `admins` dan `students` dijadualkan TANPA akses terus oleh `anon`/`authenticated`
+   (RLS diaktifkan tanpa policy permissive + `REVOKE` grant di migration `0002`).
+2. Semua baca/tulis data melalui **fungsi RPC `SECURITY DEFINER`** yang
+   mengesahkan **token sesi tersuai**.
+3. Token sesi ialah `role:principal:expiry` yang ditanda tangan dengan
+   **HMAC-SHA256** menggunakan rahsia dalam jadual `app_config`.
+4. Ibu bapa memanggil `login_guardian(delima_id)` → dapat token guardian.
+   Admin memanggil `authenticate_admin(username, password)` → dapat token admin.
+5. Setiap RPC admin mengesahkan token melalui `assert_admin_token()`.
+
+> **Penting:** Kunci `anon` hanya boleh memanggil fungsi RPC yang dibenarkan.
+> Jadual `students`, `admins`, `import_logs`, dan `app_config` terlindung
+> sepenuhnya daripada akses SQL langsung.
+
+## Akaun Admin Lalai
+
+Selepas menjalankan `seed.sql`, akaun admin lalai:
+
+| Medan | Nilai |
+|-------|-------|
+| **Nama Pengguna** | `admin` |
+| **Kata Laluan** | `admin123` |
+
+> **WAJIB tukar kata laluan ini** sebelum penggunaan produksi. Jalankan:
+> ```sql
+> update public.admins
+> set password_hash = crypt('password-baharu-yang-kuat', gen_salt('bf'))
+> where username = 'admin';
+> ```
+>
+> Untuk tambah admin lain:
+> ```sql
+> insert into public.admins (username, password_hash, nama)
+> values ('nama-admin', crypt('kata-laluan', gen_salt('bf')), 'Nama Pentadbir');
+> ```
 
 ## Persediaan Tempatan
 
@@ -31,14 +82,9 @@ npm install
 1. Cipta projek Supabase percuma di https://app.supabase.com
 2. Pergi ke **SQL Editor** dan jalankan:
    - `supabase/migrations/0001_init_schema.sql`
-   - `supabase/migrations/0002_rls_policies.sql`
-3. (Pilihan) Jalankan `supabase/seed.sql` untuk data contoh.
-   - Untuk admin, anda perlu cipta akaun Supabase Auth secara manual
-     dahulu (lihat "Konfigurasi Admin" di bawah).
-4. Pergi ke **Authentication → Providers** dan pastikan **Email** diaktifkan.
-   - Untuk e-mel OTP, bahagian "Email" mesti diaktifkan.
-   - Disyorkan: **Disable sign-ups** supaya akaun baharu tidak boleh
-     dicipta secara rawak (ibu bapa/admin ditambah secara manual).
+   - `supabase/migrations/0002_custom_auth.sql`
+3. Jalankan `supabase/seed.sql` untuk mencipta akaun admin lalai.
+4. Tiada perlu konfigurasi Auth/SMTP — projek guna auth tersuai.
 
 ### 3. Tetapkan env vars
 
@@ -67,34 +113,13 @@ npm run dev
 
 Buka http://localhost:5173
 
-### 6. Build produksi
+- **Admin** log masuk di `/admin/login` (username + password).
+- **Ibu bapa** log masuk di `/login` (ID DELIMA).
 
-```bash
-npm run build
-```
+### 6. Tambah data pelajar pertama
 
-Output di `dist/`.
-
-## Konfigurasi Admin
-
-Login admin menggunakan **nama pengguna + kata laluan**, bukannya e-mel.
-Untuk cipta admin:
-
-1. Di Supabase Dashboard → **Authentication → Users → Add user**:
-   - Email: `admin@admin.sfxkeningau.internal` (atau apa-apa nama
-     pengguna yang dikehendaki, format: `<username>@admin.sfxkeningau.internal`)
-   - Password: kata laluan sebenar
-   - Auto Confirm User: ya
-2. Di **SQL Editor**, jalankan:
-   ```sql
-   insert into public.admins (username, auth_user_id, nama)
-   values (
-     'admin',  -- username yang akan digunakan untuk login
-     '<AUTH_USER_ID>',  -- uid dari auth.users
-     'Pentadbir Sekolah'
-   );
-   ```
-3. Untuk login, guna username `admin` dan kata laluan yang ditetapkan di langkah 1.
+Tiada pelajar di-seed — semua data pelajar dimasukkan oleh admin melalui
+halaman **Informasi ID DELIMA** (tambah manual atau **Import Excel**).
 
 ## Struktur Modul
 
@@ -102,11 +127,11 @@ Semua modul diletakkan di bawah `src/features/<nama-modul>/`:
 
 ```
 features/
-  auth/           # Log masuk (parent OTP, admin username+password)
+  auth/           # Log masuk (guardian ID DELIMA, admin username+password)
   delima-info/    # Modul Informasi ID DELIMA
     parent/       # Paparan ibu bapa
     admin/        # Paparan admin (CRUD, import)
-    api.ts        # Panggilan Supabase
+    api.ts        # Panggilan Supabase (RPC)
     queries.ts    # TanStack Query hooks
     types.ts      # Zod schema + types
 ```
@@ -147,8 +172,8 @@ Selepas deploy, uji:
 
 PWA cache:
 - App shell: cache-first
-- API Supabase (`/rest/v1/`): network-first, fallback ke cache 5 minit
-  untuk paparan terakhir yang berjaya.
+- API Supabase (`/rpc/`): dikecualikan daripada caching agresif supaya data
+  pelajar sentiasa terkini.
 
 ## Bahasa Melayu
 

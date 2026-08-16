@@ -1,4 +1,5 @@
 import { LogOut, Menu, User as UserIcon } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,8 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuthStore } from "@/stores/authStore";
-import { useAdminAuth } from "@/features/auth/admin/useAdminAuth";
-import { useParentAuth } from "@/features/auth/parent/useParentAuth";
+import { signOut } from "@/features/auth/api";
 import { bm } from "@/lib/i18n";
 
 interface AppHeaderProps {
@@ -19,14 +19,21 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ onMenuClick }: AppHeaderProps) {
-  const { user, isAdmin } = useAuthStore();
-  const admin = useAdminAuth();
-  const parent = useParentAuth();
+  const { session, isAdmin, isGuardian } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const logout = isAdmin() ? admin.logout : parent.logout;
-  const email = user?.email ?? "";
+  const logout = () => {
+    signOut();
+    const target = isAdmin() ? "/admin/login" : "/login";
+    navigate(target, { replace: true });
+  };
 
-  const initials = email.slice(0, 2).toUpperCase() || "SFX";
+  const identity = isAdmin()
+    ? session?.username ?? "Pentadbir"
+    : session?.delimaId ?? "Ibu Bapa";
+
+  const initials = identity.slice(0, 2).toUpperCase() || "SFX";
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
@@ -69,12 +76,15 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
                 {isAdmin() ? "Pentadbir" : "Ibu Bapa / Penjaga"}
               </p>
               <p className="text-xs leading-none text-muted-foreground truncate">
-                {email}
+                {isGuardian() ? `ID: ${identity}` : identity}
               </p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem disabled>
+          <DropdownMenuItem
+            onClick={() => navigate(location.pathname)}
+            disabled
+          >
             <UserIcon className="h-4 w-4" /> {bm.nav.profile}
           </DropdownMenuItem>
           <DropdownMenuSeparator />

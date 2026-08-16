@@ -271,7 +271,7 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{bm.delima.importTitle}</DialogTitle>
           <DialogDescription>
@@ -345,7 +345,7 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
                 )}
               </button>
               {showSpec && (
-                <div className="space-y-4 border-t p-4 text-sm">
+                <div className="max-h-[55vh] space-y-4 overflow-y-auto border-t p-4 text-sm">
                   <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-blue-900">
                     <Info className="mt-0.5 h-4 w-4 shrink-0" />
                     <p className="text-xs leading-relaxed">

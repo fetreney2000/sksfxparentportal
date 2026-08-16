@@ -68,7 +68,7 @@ function RoleSelectPage() {
         >
           <p className="text-base font-semibold">Ibu Bapa / Penjaga</p>
           <p className="text-xs text-muted-foreground">
-            Log masuk dengan e-mel + OTP
+            Log masuk dengan ID DELIMA anak anda
           </p>
         </a>
         <a

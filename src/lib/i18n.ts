@@ -14,23 +14,12 @@ export const bm = {
     email: "E-mel",
     password: "Kata Laluan",
     username: "Nama Pengguna",
-    sendOtp: "Hantar Kod Pengesahan",
-    enterCode: "Masukkan Kod Pengesahan",
-    resendCode: "Hantar Semula Kod",
-    verify: "Sahkan",
-    backToEmail: "Kembali ke E-mel",
     welcome: "Selamat Datang",
-    invalidEmail: "Sila masukkan e-mel yang sah.",
-    otpSent: "Kod pengesahan telah dihantar ke e-mel anda.",
     invalidCredentials: "Nama pengguna atau kata laluan salah.",
     emailNotRegistered:
       "E-mel tidak dijumpai dalam rekod sekolah. Sila hubungi pihak sekolah.",
     adminLoginSubtitle:
       "Log masuk sebagai pentadbir untuk mengurus maklumat portal.",
-    parentLoginSubtitle:
-      "Masukkan e-mel anda untuk menerima kod pengesahan (OTP).",
-    parentLoginFooter:
-      "Tiada akaun? Hubungi pihak sekolah untuk mendaftarkan e-mel anda.",
   },
   nav: {
     dashboard: "Papan Pemuka",

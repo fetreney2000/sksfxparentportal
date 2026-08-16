@@ -219,10 +219,14 @@ $$;
 
 -- ---------------------------------------------------------------------
 -- Ibu Bapa: data pelajar sendiri (token guardian / delima_id)
+--
+-- NOTA: mengembalikan JSONB (bukan SETOF) bagi mengelakkan isu pengkodean
+-- jenis komposit & had baris PostgREST selepas perubahan skema jadual.
+-- Pulangan ialah jsonb array (0 atau 1 item).
 -- ---------------------------------------------------------------------
 
 create or replace function public.get_guardian_student(p_token text)
-returns setof public.students
+returns jsonb
 language plpgsql
 security definer
 as $$
@@ -233,38 +237,48 @@ begin
   if v is null or v->>'role' <> 'guardian' then
     raise exception 'Sesi tidak sah atau telah tamat tempoh. Sila log masuk semula.';
   end if;
-  return query
-    select * from public.students
+  return coalesce((
+    select jsonb_agg(s order by s.nama)
+    from public.students s
     where delima_id = (v->>'principal')
-    limit 1;
+  ), '[]'::jsonb);
 end;
 $$;
 
 -- ---------------------------------------------------------------------
 -- Admin: CRUD pelajar (semua memerlukan token admin)
+--
+-- NOTA: list_students_admin & list_student_ids_admin mengembalikan JSONB
+-- (bukan SETOF) untuk mengelakkan had lalai PostgREST sebanyak 1000 baris.
+-- JSON tidak tertakluk kepada had baris tersebut, jadi SEMUA rekod dapat
+-- dipaparkan walaupun melebihi 1000.
 -- ---------------------------------------------------------------------
 
 create or replace function public.list_students_admin(p_token text)
-returns setof public.students
+returns jsonb
 language plpgsql
 security definer
 as $$
 begin
   perform assert_admin_token(p_token);
-  return query
-    select * from public.students
-    order by nama;
+  return coalesce((
+    select jsonb_agg(s order by s.nama)
+    from public.students s
+  ), '[]'::jsonb);
 end;
 $$;
 
 create or replace function public.list_student_ids_admin(p_token text)
-returns setof text
+returns jsonb
 language plpgsql
 security definer
 as $$
 begin
   perform assert_admin_token(p_token);
-  return query select delima_id from public.students;
+  return coalesce((
+    select jsonb_agg(delima_id order by delima_id)
+    from public.students
+  ), '[]'::jsonb);
 end;
 $$;
 

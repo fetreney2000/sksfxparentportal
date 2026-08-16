@@ -92,3 +92,32 @@ export function handleInvalidSession(error: unknown): void {
     useAuthStore.getState().clear();
   }
 }
+
+/**
+ * Tukar nama pengguna & kata laluan admin sendiri.
+ * Kata laluan semasa mesti diberikan; token admin disemak di sisi DB.
+ */
+export async function changeAdminCredentials(params: {
+  currentPassword: string;
+  newUsername: string;
+  newPassword: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const token = useAuthStore.getState().getToken();
+  if (!token) {
+    return { ok: false, error: "Sesi tidak sah." };
+  }
+  const { data, error } = await supabase.rpc("change_admin_credentials", {
+    p_token: token,
+    p_current_password: params.currentPassword,
+    p_new_username: params.newUsername,
+    p_new_password: params.newPassword,
+  });
+  if (error) {
+    handleInvalidSession(error);
+    return { ok: false, error: error.message };
+  }
+  if (data && data.ok) {
+    return { ok: true };
+  }
+  return { ok: false, error: data?.error ?? "Gagal menukar kredensial." };
+}

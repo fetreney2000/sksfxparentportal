@@ -22,6 +22,7 @@ export interface AuthState {
   setSession: (session: AppSession | null) => void;
   setStatus: (status: AuthState["status"]) => void;
   clear: () => void;
+  updateUsername: (username: string) => void;
 
   isAdmin: () => boolean;
   isGuardian: () => boolean;
@@ -44,6 +45,11 @@ export const useAuthStore = create<AuthState>()(
 
       clear: () =>
         set({ session: null, status: "unauthenticated" }),
+
+      updateUsername: (username) =>
+        set((s) =>
+          s.session ? { session: { ...s.session, username } } : {}
+        ),
 
       isAdmin: () => get().session?.role === "admin",
       isGuardian: () => get().session?.role === "guardian",

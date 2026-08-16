@@ -39,6 +39,22 @@ export const bm = {
     settings: "Tetapan",
     profile: "Profil",
   },
+  settings: {
+    title: "Tetapan Akaun",
+    changeCredentials: "Tukar Nama Pengguna & Kata Laluan",
+    description:
+      "Kemas kini nama pengguna dan kata laluan log masuk pentadbir. Kata laluan semasa diperlukan.",
+    currentPassword: "Kata Laluan Semasa",
+    newUsername: "Nama Pengguna Baharu",
+    newPassword: "Kata Laluan Baharu",
+    confirmPassword: "Sahkan Kata Laluan Baharu",
+    passwordMin: "Kata laluan baharu sekurang-kurangnya 8 aksara",
+    passwordMismatch: "Kata laluan baharu tidak sepadan",
+    currentRequired: "Kata laluan semasa wajib diisi",
+    usernameRequired: "Nama pengguna baharu wajib diisi",
+    successUpdated: "Kredensial berjaya dikemas kini.",
+    note: "Gunakan nama pengguna/kata laluan baharu pada log masuk seterusnya.",
+  },
   common: {
     loading: "Sedang Memuatkan...",
     noData: "Tiada Data Dijumpai",

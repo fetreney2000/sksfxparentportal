@@ -4,6 +4,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
 import { ParentLoginPage } from "@/features/auth/parent/ParentLoginPage";
 import { AdminLoginPage } from "@/features/auth/admin/AdminLoginPage";
+import { AdminSettingsPage } from "@/features/auth/admin/AdminSettingsPage";
 import { ParentDelimaPage } from "@/features/delima-info/parent/ParentDelimaPage";
 import { AdminDelimaListPage } from "@/features/delima-info/admin/AdminDelimaListPage";
 import { AdminDashboardPage } from "@/features/delima-info/admin/AdminDashboardPage";
@@ -40,6 +41,7 @@ export function AppRouter() {
         <Route index element={<AdminDashboardPage />} />
         <Route path="delima-info" element={<AdminDelimaListPage />} />
         <Route path="import-history" element={<ImportHistoryPage />} />
+        <Route path="settings" element={<AdminSettingsPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

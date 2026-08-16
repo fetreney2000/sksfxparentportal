@@ -88,7 +88,6 @@ export function Combobox({
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={placeholder}
                 className="h-8"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && allowCustom && query.trim()) {

@@ -63,7 +63,6 @@ export function AdminLoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="pl-9"
-                  placeholder="admin"
                 />
               </div>
             </div>

@@ -116,7 +116,6 @@ export function DelimaFormDialog({
                   <FormLabel>{bm.delima.delimaId}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="cth. DLM-2026-001"
                       autoFocus
                       {...field}
                     />
@@ -132,7 +131,7 @@ export function DelimaFormDialog({
                 <FormItem>
                   <FormLabel>{bm.delima.studentName}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nama penuh pelajar" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -145,10 +144,7 @@ export function DelimaFormDialog({
                 <FormItem>
                   <FormLabel>{bm.delima.delimaPassword}</FormLabel>
                   <FormControl>
-                    <PasswordInput
-                      placeholder="Kata laluan akaun DELIMA"
-                      {...field}
-                    />
+                    <PasswordInput {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

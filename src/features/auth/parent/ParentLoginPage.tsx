@@ -68,7 +68,6 @@ export function ParentLoginPage() {
                   required
                   value={delimaId}
                   onChange={(e) => setDelimaId(e.target.value.trim())}
-                  placeholder="cth. m-15247730@moe-dl.edu.my"
                   className="pl-9"
                 />
               </div>

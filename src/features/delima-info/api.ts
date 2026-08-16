@@ -37,7 +37,9 @@ export async function fetchGuardianStudent(): Promise<StudentRow> {
   const token = getToken();
   if (!token) authError();
   const { data, error } = await supabase.rpc("get_guardian_student", { p_token: token });
-  if (error) throw new Error("Tidak dapat memuatkan maklumat pelajar.");
+  if (error) {
+    throw new Error(`get_guardian_student: ${error.message} (${error.code ?? "?"})`);
+  }
   if (!data || data.length === 0) {
     throw new Error("Tiada rekod pelajar untuk ID DELIMA ini.");
   }

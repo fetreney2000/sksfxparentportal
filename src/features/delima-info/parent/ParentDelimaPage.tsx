@@ -9,7 +9,7 @@ import { bm } from "@/lib/i18n";
 import { User } from "lucide-react";
 
 export function ParentDelimaPage() {
-  const { data, isLoading, isError, refetch } = useGuardianStudent();
+  const { data, isLoading, isError, error, refetch } = useGuardianStudent();
   const session = useAuthStore((s) => s.session);
 
   if (isLoading) {
@@ -20,7 +20,7 @@ export function ParentDelimaPage() {
     return (
       <ErrorState
         title="Ralat"
-        description="Tidak dapat memuatkan maklumat pelajar."
+        description={error instanceof Error ? error.message : "Tidak dapat memuatkan maklumat pelajar."}
         onRetry={() => refetch()}
       />
     );

@@ -87,7 +87,7 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
   const [result, setResult] = useState<{
     success: number;
     failed: number;
-    errors: { row: number; error: string; data: Partial<DelimaFormValues> }[];
+    errors: { row: number; delima_id: string; error: string; data: Partial<DelimaFormValues> }[];
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -214,7 +214,12 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
 
     const toImport = validRows.map((m) => m.data as DelimaFormValues);
     const total = toImport.length;
-    const errors: { row: number; error: string; data: Partial<DelimaFormValues> }[] = [];
+    const errors: {
+      row: number; // nombor baris asal dalam fail Excel (1-based)
+      delima_id: string;
+      error: string;
+      data: Partial<DelimaFormValues>;
+    }[] = [];
 
     const BATCH = 100;
     let success = 0;
@@ -226,9 +231,12 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
       });
       success += res.success;
       res.errors.forEach((e) => {
-        const orig = validRows[i + e.row];
+        const rowIdx = i + e.index;
+        const orig = validRows[rowIdx];
         errors.push({
-          row: i + e.row,
+          // Nombor baris asal dalam fail Excel
+          row: orig?.row.rowNumber ?? rowIdx + 1,
+          delima_id: e.delima_id || (orig?.data.delima_id ?? ""),
           error: e.error,
           data: orig?.data ?? {},
         });
@@ -236,20 +244,30 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
       setProgress(Math.round(((i + chunk.length) / total) * 100));
     }
 
-    setResult({ success, failed: errors.length, errors });
+    // Gabungkan baris yang TIDAK sah pada langkah pengesahan (baris yang
+    // di-skip kerana gagal validasi) supaya admin nampak SEBAB setiap baris.
+    const validationErrors = invalidRows.map((m) => ({
+      row: m.row.rowNumber,
+      delima_id: m.data.delima_id ?? "",
+      error: m.errors[0] ?? "Medan tidak lengkap atau tidak sah.",
+      data: m.data,
+    }));
+    const allErrors = [...validationErrors, ...errors];
+
+    setResult({ success, failed: allErrors.length, errors: allErrors });
     await logImport.mutateAsync({
       filename: file?.name ?? "unknown.xlsx",
-      totalRows: total,
+      totalRows: total + invalidRows.length,
       successRows: success,
-      failedRows: errors.length,
-      errorDetail: errors.length ? errors : null,
+      failedRows: allErrors.length,
+      errorDetail: allErrors.length ? allErrors : null,
     });
     setImporting(false);
     setProgress(100);
-    if (errors.length === 0) {
+    if (allErrors.length === 0) {
       toast.success(`${bm.delima.importSuccess}: ${success} baris`);
     } else {
-      toast.warning(`Import selesai: ${success} berjaya, ${errors.length} gagal`);
+      toast.warning(`Import selesai: ${success} berjaya, ${allErrors.length} baris tidak diimport`);
     }
   };
 
@@ -670,15 +688,51 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
                     <p className="text-xs text-red-700">{bm.common.rowsFailed}</p>
                   </div>
                 </div>
+
                 {result.failed > 0 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={downloadErrorLog}
-                    className="w-full"
-                  >
-                    <Download className="h-4 w-4" /> {bm.delima.downloadErrorLog}
-                  </Button>
+                  <>
+                    <div className="rounded-md border border-red-200 bg-red-50/40 p-3">
+                      <p className="mb-2 text-sm font-semibold text-red-800">
+                        Baris yang tidak dapat diimport ({result.failed}):
+                      </p>
+                      <div className="max-h-56 overflow-auto rounded-md border bg-background">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-16">Baris</TableHead>
+                              <TableHead>ID Delima</TableHead>
+                              <TableHead>Sebab</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {result.errors
+                              .slice()
+                              .sort((a, b) => a.row - b.row)
+                              .map((e, i) => (
+                                <TableRow key={`${e.row}-${i}`}>
+                                  <TableCell className="text-xs font-medium text-red-700">
+                                    {e.row}
+                                  </TableCell>
+                                  <TableCell className="font-mono text-xs">
+                                    {e.delima_id || "—"}
+                                  </TableCell>
+                                  <TableCell className="text-xs">{e.error}</TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={downloadErrorLog}
+                      className="w-full"
+                    >
+                      <Download className="h-4 w-4" /> {bm.delima.downloadErrorLog}
+                    </Button>
+                  </>
                 )}
               </div>
             )}

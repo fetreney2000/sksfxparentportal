@@ -19,7 +19,8 @@ export interface ImportLogRow {
   created_at: string;
 }
 
-type FailedResult = { success: number; failed: number; errors: { row: number; error: string }[] };
+type BatchError = { index: number; delima_id: string; error: string };
+type FailedResult = { success: number; failed: number; errors: BatchError[] };
 
 function getToken(): string | null {
   return useAuthStore.getState().getToken();
@@ -127,7 +128,7 @@ export async function batchUpsertDelima(
   if (!token) authError();
   const { data, error } = await supabase.rpc("batch_upsert_students_admin", {
     p_token: token,
-    p_rows: JSON.stringify(rows),
+    p_rows: rows,
     p_conflict: conflictStrategy,
   });
   if (error) throw new Error(error.message);
@@ -139,10 +140,16 @@ export async function batchUpsertDelima(
     failed: ok.failed,
     errors:
       ok.failed > 0 && Array.isArray(ok.errors)
-        ? ok.errors.map((e, i) => ({
-            row: i,
-            error: typeof e === "object" && e && "error" in e ? String((e as { error: unknown }).error) : String(e),
-          }))
+        ? ok.errors
+            .map((e) => {
+              const obj = e && typeof e === "object" ? (e as Record<string, unknown>) : {};
+              return {
+                index: Number(obj.index ?? NaN),
+                delima_id: String(obj.delima_id ?? ""),
+                error: String(obj.error ?? "Ralat tidak diketahui"),
+              };
+            })
+            .filter((err) => !Number.isNaN(err.index))
         : [],
   };
 }

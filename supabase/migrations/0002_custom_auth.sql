@@ -350,14 +350,21 @@ language plpgsql
 security definer
 as $$
 declare
+  v_rec record;
   v_item jsonb;
+  v_idx int;
   v_success int := 0;
   v_errors jsonb := '[]';
 begin
   perform assert_admin_token(p_token);
 
-  for v_item in select * from jsonb_array_elements(p_rows)
+  -- ordinality mula dari 1; tolak 1 untuk indeks 0-based (sepadan batch client)
+  for v_rec in
+    select t.ordinality - 1 as idx, t.value
+    from jsonb_array_elements(p_rows) with ordinality as t(value, ordinality)
   loop
+    v_item := v_rec.value;
+    v_idx := v_rec.idx;
     begin
       if p_conflict = 'upsert' then
         insert into public.students (delima_id, nama, tahun, kelas, kata_laluan)
@@ -389,8 +396,9 @@ begin
     exception
       when others then
         v_errors := v_errors || jsonb_build_object(
+          'index', v_idx,
           'delima_id', v_item->>'delima_id',
-          'error', format('Baris gagal diimport: %s', SQLERRM)
+          'error', format('%s', SQLERRM)
         );
     end;
   end loop;

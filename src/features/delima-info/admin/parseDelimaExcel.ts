@@ -214,15 +214,20 @@ export function generateDelimaTemplate(): Blob {
  * Jana fail .xlsx log ralat untuk dimuat turun oleh admin.
  */
 export function generateErrorLog(
-  failedRows: Array<{ row: number; error: string; data: Partial<DelimaFormValues> }>
+  failedRows: Array<{
+    row: number;
+    error: string;
+    delima_id?: string;
+    data: Partial<DelimaFormValues>;
+  }>
 ): Blob {
   const headers = ["Baris", "Ralat", "ID Delima", "Nama", "Tahun", "Kelas", "Kata Laluan"];
   const aoa = [
     headers,
     ...failedRows.map((f) => [
-      String(f.row + 1),
+      String(f.row),
       f.error,
-      f.data.delima_id ?? "",
+      f.delima_id ?? f.data.delima_id ?? "",
       f.data.nama ?? "",
       f.data.tahun ?? "",
       f.data.kelas ?? "",

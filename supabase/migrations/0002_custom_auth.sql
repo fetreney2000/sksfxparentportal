@@ -56,7 +56,9 @@ declare
 begin
   v_exp := (extract(epoch from now()))::bigint + p_ttl_seconds;
   v_payload := p_role || ':' || p_principal || ':' || v_exp;
-  return v_payload || '.' || encode(hmac(v_payload, app_secret(), 'sha256'), 'hex');
+  -- Gunakan '~' sebagai pemisah payload <-> tandatangan (BUKAN '.' kerana
+  -- principal (delima_id) boleh mengandungi titik, cth: m-x@moe-dl.edu.my).
+  return v_payload || '~' || encode(hmac(v_payload, app_secret(), 'sha256'), 'hex');
 end;
 $$;
 
@@ -80,7 +82,7 @@ begin
     return null;
   end if;
 
-  v_parts := string_to_array(p_token, '.');
+  v_parts := string_to_array(p_token, '~');
   if cardinality(v_parts) <> 2 then
     return null;
   end if;

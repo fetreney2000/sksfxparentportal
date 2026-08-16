@@ -7,7 +7,6 @@ import {
   getSortedRowModel,
   useReactTable,
   type SortingState,
-  type ColumnFiltersState,
 } from "@tanstack/react-table";
 import {
   Plus,
@@ -39,7 +38,6 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ErrorState } from "@/components/common/ErrorState";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-import { Combobox } from "@/components/ui/combobox";
 import { bm } from "@/lib/i18n";
 import { createDelimaColumns } from "./columns";
 import { useDeleteDelima, useDelimaList, type DelimaRow } from "../queries";
@@ -56,26 +54,9 @@ export function AdminDelimaListPage() {
   const [toDelete, setToDelete] = useState<DelimaRow | null>(null);
 
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
   const rows = data ?? [];
-
-  // Pilihan dinamik untuk filter tahun & kelas
-  const tahunOptions = useMemo(
-    () =>
-      Array.from(new Set(rows.map((r) => r.tahun).filter(Boolean)))
-        .sort()
-        .map((v) => ({ value: v, label: v })),
-    [rows]
-  );
-  const kelasOptions = useMemo(
-    () =>
-      Array.from(new Set(rows.map((r) => r.kelas).filter(Boolean)))
-        .sort()
-        .map((v) => ({ value: v, label: v })),
-    [rows]
-  );
 
   const columns = useMemo(
     () =>
@@ -89,21 +70,11 @@ export function AdminDelimaListPage() {
     []
   );
 
-  const filteredRows = useMemo(() => {
-    let r = rows;
-    const tahun = (columnFilters.find((f) => f.id === "tahun")?.value as string) ?? "";
-    const kelas = (columnFilters.find((f) => f.id === "kelas")?.value as string) ?? "";
-    if (tahun) r = r.filter((x) => x.tahun === tahun);
-    if (kelas) r = r.filter((x) => x.kelas === kelas);
-    return r;
-  }, [rows, columnFilters]);
-
   const table = useReactTable({
-    data: filteredRows,
+    data: rows,
     columns,
-    state: { sorting, columnFilters, globalFilter },
+    state: { sorting, globalFilter },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -171,7 +142,7 @@ export function AdminDelimaListPage() {
           <CardTitle className="text-base">Senarai Pelajar</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:max-w-md">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -181,32 +152,6 @@ export function AdminDelimaListPage() {
                 className="pl-9"
               />
             </div>
-            <Combobox
-              value={
-                (columnFilters.find((f) => f.id === "tahun")?.value as string) ?? ""
-              }
-              onChange={(v) => {
-                setColumnFilters((prev) => {
-                  const others = prev.filter((f) => f.id !== "tahun");
-                  return v ? [...others, { id: "tahun", value: v }] : others;
-                });
-              }}
-              options={tahunOptions}
-              placeholder="Tapis Tahun"
-            />
-            <Combobox
-              value={
-                (columnFilters.find((f) => f.id === "kelas")?.value as string) ?? ""
-              }
-              onChange={(v) => {
-                setColumnFilters((prev) => {
-                  const others = prev.filter((f) => f.id !== "kelas");
-                  return v ? [...others, { id: "kelas", value: v }] : others;
-                });
-              }}
-              options={kelasOptions}
-              placeholder="Tapis Kelas"
-            />
           </div>
 
           <div className="rounded-md border">
@@ -255,7 +200,7 @@ export function AdminDelimaListPage() {
               <span className="font-medium">
                 {table.getRowModel().rows.length}
               </span>{" "}
-              {bm.common.of} <span className="font-medium">{filteredRows.length}</span>{" "}
+              {bm.common.of} <span className="font-medium">{rows.length}</span>{" "}
               rekod
             </p>
             <div className="flex items-center gap-2">

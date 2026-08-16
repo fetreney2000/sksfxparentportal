@@ -50,7 +50,6 @@ import {
   generateDelimaTemplate,
   generateErrorLog,
   parseDelimaExcel,
-  splitTahunKelas,
   type ParsedRow,
 } from "./parseDelimaExcel";
 import {
@@ -77,8 +76,6 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
   const [mapping, setMapping] = useState<Record<DelimaFieldKey, string>>({
     delima_id: "",
     nama: "",
-    tahun: "",
-    kelas: "",
     kata_laluan: "",
   });
   const [strategy, setStrategy] = useState<ConflictStrategy>("upsert");
@@ -103,7 +100,7 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
       setHeaders([]);
       setRows([]);
       setDataStartRow(2);
-      setMapping({ delima_id: "", nama: "", tahun: "", kelas: "", kata_laluan: "" });
+      setMapping({ delima_id: "", nama: "", kata_laluan: "" });
       setStrategy("upsert");
       setProgress(0);
       setResult(null);
@@ -171,16 +168,6 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
           (data as Record<string, string>)[k] = String(r.raw[header]).trim();
         }
       });
-
-      // Transformasi khas: tahun + kelas (D1-XXX, D2, dsb.)
-      if (data.tahun !== undefined) {
-        const split = splitTahunKelas(data.tahun, data.kelas ?? "");
-        data.tahun = split.tahun;
-        if (!data.kelas && split.kelas) {
-          data.kelas = split.kelas;
-        }
-        if (split.note) notes.push(split.note);
-      }
 
       const parsed = delimaFormSchema.safeParse(data);
       const errors = parsed.success ? [] : parsed.error.issues.map((i) => i.message);
@@ -395,16 +382,6 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
                         desc={bm.delima.specColNamaDesc}
                       />
                       <SpecRow
-                        label={bm.delima.specColTahun}
-                        required
-                        desc={bm.delima.specColTahunDesc}
-                      />
-                      <SpecRow
-                        label={bm.delima.specColKelas}
-                        required
-                        desc={bm.delima.specColKelasDesc}
-                      />
-                      <SpecRow
                         label={bm.delima.specColPassword}
                         required
                         desc={bm.delima.specColPasswordDesc}
@@ -430,8 +407,6 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
                     <ul className="grid gap-1 text-xs sm:grid-cols-2">
                       <HeaderNamesList field="delima_id" />
                       <HeaderNamesList field="nama" />
-                      <HeaderNamesList field="tahun" />
-                      <HeaderNamesList field="kelas" />
                       <HeaderNamesList field="kata_laluan" />
                     </ul>
                   </section>
@@ -445,14 +420,11 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
                     </h4>
                     <div className="space-y-1.5 rounded-md bg-background p-2 font-mono text-[11px]">
                       <div>
-                        <span className="text-muted-foreground">// Baris biasa (Tahun 2-6):</span>
+                        <span className="text-muted-foreground">
+                          // Fail sekolah (ID DELIMA, NAMA, PASSWORD diimport; TAHUN/KELAS/BIL/KP diabaikan):
+                        </span>
                         <br />
                         {bm.delima.specExample1}
-                      </div>
-                      <div className="mt-2">
-                        <span className="text-muted-foreground">// Baris Tahun 1 dengan format D1-XXX:</span>
-                        <br />
-                        {bm.delima.specExample2}
                       </div>
                     </div>
                   </section>
@@ -595,8 +567,6 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
                     <TableHead className="w-14">Baris</TableHead>
                     <TableHead>ID Delima</TableHead>
                     <TableHead>Nama</TableHead>
-                    <TableHead>Tahun</TableHead>
-                    <TableHead>Kelas</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -617,8 +587,6 @@ export function DelimaImportDialog({ open, onOpenChange }: DelimaImportDialogPro
                           </p>
                         )}
                       </TableCell>
-                      <TableCell>{m.data.tahun ?? "—"}</TableCell>
-                      <TableCell>{m.data.kelas ?? "—"}</TableCell>
                       <TableCell>
                         {m.errors.length > 0 ? (
                           <Badge variant="destructive" title={m.errors.join("; ")}>
@@ -818,10 +786,6 @@ function labelForField(k: DelimaFieldKey): string {
       return bm.delima.delimaId;
     case "nama":
       return bm.delima.studentName;
-    case "tahun":
-      return bm.delima.year;
-    case "kelas":
-      return bm.delima.class;
     case "kata_laluan":
       return bm.delima.delimaPassword;
   }

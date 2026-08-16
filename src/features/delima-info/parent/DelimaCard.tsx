@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Copy, Eye, EyeOff, Check } from "lucide-react";
+import { Copy, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import type { DelimaRow } from "../queries";
@@ -30,10 +29,6 @@ export function DelimaCard({ student }: DelimaCardProps) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <CardTitle className="truncate text-lg">{student.nama}</CardTitle>
-            <div className="mt-1 flex flex-wrap gap-1.5">
-              <Badge variant="secondary">{student.tahun}</Badge>
-              <Badge variant="outline">{student.kelas}</Badge>
-            </div>
           </div>
         </div>
       </CardHeader>
@@ -104,6 +99,3 @@ function FieldRow({ label, value, masked, onToggle, onCopy, toggleLabel }: Field
     </div>
   );
 }
-
-// Re-export supaya tidak ada dead-code jika tidak digunakan terus
-export { Check };

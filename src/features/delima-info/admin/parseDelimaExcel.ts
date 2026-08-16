@@ -107,8 +107,6 @@ export function autoMapHeaders(headers: string[]): Record<DelimaFieldKey, string
   const map: Record<DelimaFieldKey, string> = {
     delima_id: "",
     nama: "",
-    tahun: "",
-    kelas: "",
     kata_laluan: "",
   };
 
@@ -138,53 +136,14 @@ function normalize(s: string): string {
 }
 
 /**
- * Cuba auto-laras nilai mentah untuk mengekstrak tahun + kelas.
- *
- * Menyokong format khas:
- *   - "D1-CHARITY" → { tahun: "Tahun 1", kelas: "CHARITY" }
- *   - "D2"        → { tahun: "Tahun 2", kelas: <nilai asal kelas> }
- *   - "1" / "Tahun 1" → kekal
- *   - nilai lain → kekal
- */
-export function splitTahunKelas(
-  tahunRaw: string,
-  kelasRaw: string
-): { tahun: string; kelas: string; note?: string } {
-  const t = tahunRaw.trim();
-  const k = kelasRaw.trim();
-
-  // Format D1-XXX: tahun + kelas digabung
-  const m = /^D(\d)\s*-\s*(.+)$/i.exec(t);
-  if (m) {
-    const tahunNum = m[1];
-    const kelasFromTahun = m[2].trim();
-    return {
-      tahun: `Tahun ${tahunNum}`,
-      kelas: kelasFromTahun || k,
-      note: `Format "D${tahunNum}-${kelasFromTahun}" dikesan — diasingkan automatik.`,
-    };
-  }
-
-  // Format D2, D3, ... D9 → Tahun N
-  const m2 = /^D(\d+)$/i.exec(t);
-  if (m2) {
-    return {
-      tahun: `Tahun ${m2[1]}`,
-      kelas: k,
-    };
-  }
-
-  return { tahun: t, kelas: k };
-}
-
-/**
  * Jana templat xlsx kosong untuk dimuat turun oleh admin.
  *
- * Format lajur menepiti fail DELIMA standard sekolah:
+ * Format lajur menepati fail DELIMA standard sekolah (sheet "password"):
  *   BIL | ID DELIMA | NAMA | TAHUN | KELAS | PASSWORD | KP
  *
- * Lajur BIL dan KP disertakan supaya format fail tepat sama dengan sumber
- * rasmi sekolah. Lajur ini akan diabaikan oleh parser.
+ * Hanya tiga lajur diimport: ID DELIMA, NAMA, PASSWORD.
+ * Lajur lain (BIL, TAHUN, KELAS, KP) disertakan untuk padan dengan fail
+ * sumber sekolah tetapi DIABAIKAN oleh parser.
  */
 export function generateDelimaTemplate(): Blob {
   const headers = [
@@ -196,7 +155,6 @@ export function generateDelimaTemplate(): Blob {
     "PASSWORD",
     "KP",
   ];
-  // 2 baris contoh: Tahun 2-6 biasa + Tahun 1 format D1-XXX
   const examples = [
     ["1", "m-15247730@moe-dl.edu.my", "ABDURRAUF BIN JUAT", "D2", "CHARITY", "DELIMa@2075", ""],
     ["2", "m-231203018922@moe-dl.edu.my", "ABNER JACKFEREDDU", "D1-CHARITY", "", "DELIMa@2078", ""],
@@ -221,7 +179,7 @@ export function generateErrorLog(
     data: Partial<DelimaFormValues>;
   }>
 ): Blob {
-  const headers = ["Baris", "Ralat", "ID Delima", "Nama", "Tahun", "Kelas", "Kata Laluan"];
+  const headers = ["Baris", "Ralat", "ID Delima", "Nama", "Kata Laluan"];
   const aoa = [
     headers,
     ...failedRows.map((f) => [
@@ -229,8 +187,6 @@ export function generateErrorLog(
       f.error,
       f.delima_id ?? f.data.delima_id ?? "",
       f.data.nama ?? "",
-      f.data.tahun ?? "",
-      f.data.kelas ?? "",
       f.data.kata_laluan ?? "",
     ]),
   ];

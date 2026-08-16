@@ -76,8 +76,6 @@ export async function createDelima(values: DelimaFormValues): Promise<void> {
     p_token: token,
     p_delima_id: values.delima_id,
     p_nama: values.nama,
-    p_tahun: values.tahun,
-    p_kelas: values.kelas,
     p_kata_laluan: values.kata_laluan,
   });
   if (error) throw new Error(error.message);
@@ -97,8 +95,6 @@ export async function updateDelima(
     p_id: id,
     p_delima_id: values.delima_id,
     p_nama: values.nama,
-    p_tahun: values.tahun,
-    p_kelas: values.kelas,
     p_kata_laluan: values.kata_laluan,
   });
   if (error) throw new Error(error.message);

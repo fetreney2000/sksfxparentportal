@@ -133,24 +133,17 @@ export const bm = {
     specColDelimaIdDesc: "E-mel DELIMA pelajar (unik). Contoh: m-15247730@moe-dl.edu.my",
     specColNama: "Nama",
     specColNamaDesc: "Nama penuh pelajar. Wajib diisi.",
-    specColTahun: "Tahun",
-    specColTahunDesc:
-      "Tahap tahun. Sokong format: 'D1' hingga 'D6' (auto ditukar ke 'Tahun 1'-'Tahun 6'), atau 'D1-CHARITY' untuk gabung tahun + kelas (cth: 'D1-PEACE' → Tahun 1, kelas PEACE).",
-    specColKelas: "Kelas",
-    specColKelasDesc:
-      "Nama kelas. Untuk Tahun 1 lajur ini biasanya kosong jika 'D1-XXX' digunakan dalam lajur Tahun. Contoh: CHARITY, FAITH, GLORY, HOPE, PEACE, WISDOM.",
     specColPassword: "Kata Laluan",
     specColPasswordDesc:
       "Kata laluan akaun DELIMA. Wajib diisi. Contoh: DELIMa@2075",
     specColIgnored: "Lajur Diabaikan",
     specColIgnoredDesc:
-      "BIL (nombor turutan) dan KP diabaikan. Lajur tambahan juga akan diabaikan.",
+      "BIL, TAHUN, KELAS, dan KP diabaikan. Lajur tambahan lain juga akan diabaikan.",
     specHeaderNamesTitle: "Nama Lajur yang Dikenali",
     specHeaderNamesDesc:
       "Parser akan cuba memadankan nama lajur secara automatik (tidak peka huruf besar/kecil, mengabaikan jarak dan tanda baca). Anda boleh membetulkan padanan di langkah seterusnya.",
     specExamplesTitle: "Contoh Baris",
-    specExample1: "D2 | m-15247730@... | ABDURRAUF BIN JUAT | DELIMa@2075 → Tahun 2, kelas CHARITY",
-    specExample2: "D1-CHARITY | m-231203018922@... | ABNER JACKFEREDDU | DELIMa@2078 → Tahun 1, kelas CHARITY",
+    specExample1: "m-15247730@... | ABDURRAUF BIN JUAT | DELIMa@2075 → diimport sebagai ID Delima, Nama, Kata Laluan",
     specLimitations: "Had & Amaran",
     specLimitFileFormat: "Hanya fail .xlsx (Excel 2007+) diterima — .xls tidak disokong.",
     specLimitFirstSheet: "Hanya helaian pertama dibaca. Jika data di helaian lain, pindah ke helaian pertama.",

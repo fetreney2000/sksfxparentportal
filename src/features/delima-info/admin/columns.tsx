@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Eye, EyeOff, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,36 +75,6 @@ export function createDelimaColumns({
         </Button>
       ),
       cell: ({ row }) => <span className="font-medium">{row.getValue("nama")}</span>,
-    },
-    {
-      accessorKey: "tahun",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {bm.delima.year}
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => <Badge variant="secondary">{row.getValue("tahun")}</Badge>,
-    },
-    {
-      accessorKey: "kelas",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {bm.delima.class}
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => <Badge variant="outline">{row.getValue("kelas")}</Badge>,
     },
     {
       accessorKey: "kata_laluan",

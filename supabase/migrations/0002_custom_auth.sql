@@ -185,8 +185,6 @@ begin
     'student', jsonb_build_object(
       'delima_id', v_student.delima_id,
       'nama', v_student.nama,
-      'tahun', v_student.tahun,
-      'kelas', v_student.kelas,
       'kata_laluan', v_student.kata_laluan
     )
   );
@@ -255,7 +253,7 @@ begin
   perform assert_admin_token(p_token);
   return query
     select * from public.students
-    order by tahun, kelas, nama;
+    order by nama;
 end;
 $$;
 
@@ -274,8 +272,6 @@ create or replace function public.create_student_admin(
   p_token text,
   p_delima_id text,
   p_nama text,
-  p_tahun text,
-  p_kelas text,
   p_kata_laluan text
 )
 returns void
@@ -285,8 +281,8 @@ as $$
 begin
   perform assert_admin_token(p_token);
   begin
-    insert into public.students (delima_id, nama, tahun, kelas, kata_laluan)
-    values (trim(p_delima_id), trim(p_nama), trim(p_tahun), trim(p_kelas), p_kata_laluan);
+    insert into public.students (delima_id, nama, kata_laluan)
+    values (trim(p_delima_id), trim(p_nama), p_kata_laluan);
   exception
     when unique_violation then
       raise exception 'ID Delima ini sudah wujud dalam pangkalan data.';
@@ -299,8 +295,6 @@ create or replace function public.update_student_admin(
   p_id uuid,
   p_delima_id text,
   p_nama text,
-  p_tahun text,
-  p_kelas text,
   p_kata_laluan text
 )
 returns void
@@ -313,8 +307,6 @@ begin
     update public.students
     set delima_id = trim(p_delima_id),
         nama = trim(p_nama),
-        tahun = trim(p_tahun),
-        kelas = trim(p_kelas),
         kata_laluan = p_kata_laluan,
         updated_at = now()
     where id = p_id;
@@ -367,27 +359,21 @@ begin
     v_idx := v_rec.idx;
     begin
       if p_conflict = 'upsert' then
-        insert into public.students (delima_id, nama, tahun, kelas, kata_laluan)
+        insert into public.students (delima_id, nama, kata_laluan)
         values (
           trim(v_item->>'delima_id'),
           trim(v_item->>'nama'),
-          trim(v_item->>'tahun'),
-          trim(v_item->>'kelas'),
           v_item->>'kata_laluan'
         )
         on conflict (delima_id) do update
         set nama = excluded.nama,
-            tahun = excluded.tahun,
-            kelas = excluded.kelas,
             kata_laluan = excluded.kata_laluan,
             updated_at = now();
       else
-        insert into public.students (delima_id, nama, tahun, kelas, kata_laluan)
+        insert into public.students (delima_id, nama, kata_laluan)
         values (
           trim(v_item->>'delima_id'),
           trim(v_item->>'nama'),
-          trim(v_item->>'tahun'),
-          trim(v_item->>'kelas'),
           v_item->>'kata_laluan'
         )
         on conflict (delima_id) do nothing;
@@ -464,8 +450,8 @@ grant execute on function public.login_guardian(text) to anon, authenticated;
 grant execute on function public.get_guardian_student(text) to anon, authenticated;
 grant execute on function public.list_students_admin(text) to anon, authenticated;
 grant execute on function public.list_student_ids_admin(text) to anon, authenticated;
-grant execute on function public.create_student_admin(text, text, text, text, text, text) to anon, authenticated;
-grant execute on function public.update_student_admin(text, uuid, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.create_student_admin(text, text, text, text) to anon, authenticated;
+grant execute on function public.update_student_admin(text, uuid, text, text, text) to anon, authenticated;
 grant execute on function public.delete_student_admin(text, uuid) to anon, authenticated;
 grant execute on function public.batch_upsert_students_admin(text, jsonb, text) to anon, authenticated;
 grant execute on function public.list_import_logs_admin(text) to anon, authenticated;

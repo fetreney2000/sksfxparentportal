@@ -21,11 +21,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Combobox } from "@/components/ui/combobox";
 import { PasswordInput } from "@/components/common/PasswordInput";
 import { bm } from "@/lib/i18n";
 import { delimaFormSchema, type DelimaFormValues } from "../types";
-import { TAHUN_SUGGESTIONS } from "../types";
 import {
   useCreateDelima,
   useDelimaList,
@@ -49,29 +47,11 @@ export function DelimaFormDialog({
   const createMut = useCreateDelima();
   const updateMut = useUpdateDelima();
 
-  // Bina pilihan kelas secara dinamik dari data sedia ada
-  const kelasOptions = Array.from(
-    new Set((allStudents ?? []).map((s) => s.kelas).filter(Boolean))
-  )
-    .sort()
-    .map((v) => ({ value: v, label: v }));
-
-  const tahunOptions = Array.from(
-    new Set([
-      ...TAHUN_SUGGESTIONS,
-      ...((allStudents ?? []).map((s) => s.tahun).filter(Boolean) as string[]),
-    ])
-  )
-    .sort()
-    .map((v) => ({ value: v, label: v }));
-
   const form = useForm<DelimaFormValues>({
     resolver: zodResolver(delimaFormSchema),
     defaultValues: {
       delima_id: "",
       nama: "",
-      tahun: "",
-      kelas: "",
       kata_laluan: "",
     },
   });
@@ -83,11 +63,9 @@ export function DelimaFormDialog({
           ? {
               delima_id: initial.delima_id,
               nama: initial.nama,
-              tahun: initial.tahun,
-              kelas: initial.kelas,
               kata_laluan: initial.kata_laluan,
             }
-          : { delima_id: "", nama: "", tahun: "", kelas: "", kata_laluan: "" }
+          : { delima_id: "", nama: "", kata_laluan: "" }
       );
     }
   }, [open, initial, form]);
@@ -160,44 +138,6 @@ export function DelimaFormDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="tahun"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{bm.delima.year}</FormLabel>
-                    <FormControl>
-                      <Combobox
-                        value={field.value}
-                        onChange={field.onChange}
-                        options={tahunOptions}
-                        placeholder="Pilih tahun..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="kelas"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{bm.delima.class}</FormLabel>
-                    <FormControl>
-                      <Combobox
-                        value={field.value}
-                        onChange={field.onChange}
-                        options={kelasOptions}
-                        placeholder="Pilih kelas..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
             <FormField
               control={form.control}
               name="kata_laluan"

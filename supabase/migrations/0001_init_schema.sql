@@ -19,15 +19,11 @@ create table if not exists public.students (
   id uuid primary key default gen_random_uuid(),
   delima_id text not null unique,
   nama text not null,
-  tahun text not null,
-  kelas text not null,
   kata_laluan text not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
-create index if not exists idx_students_tahun on public.students(tahun);
-create index if not exists idx_students_kelas on public.students(kelas);
 create index if not exists idx_students_nama on public.students(nama);
 
 -- ---------------------------------------------------------------------

@@ -41,19 +41,33 @@ function rpcError(error: unknown): never {
 
 /**
  * Ibu bapa: dapatkan maklumat pelajar sendiri (token guardian / delima_id).
+ *
+ * Menggunakan `get_guardian_student` untuk data terkini. Jika RPC itu tidak
+ * tersedia (cth. fungsi belum dimigrasi di pangkalan data), fungsi ini
+ * mengembalikan snapshot pelajar yang disimpan semasa log masuk
+ * (daripada `login_guardian`) supaya halaman ibu bapa tetap berfungsi.
  */
 export async function fetchGuardianStudent(): Promise<StudentRow> {
   const token = getToken();
   if (!token) authError();
-  const { data, error } = await supabase.rpc("get_guardian_student", { p_token: token });
-  if (error) {
-    handleInvalidSession(error);
-    throw new Error(`get_guardian_student: ${error.message} (${error.code ?? "?"})`);
+  const session = useAuthStore.getState().session;
+
+  try {
+    const { data, error } = await supabase.rpc("get_guardian_student", {
+      p_token: token,
+    });
+    if (!error && data && data.length > 0) {
+      return data[0] as StudentRow;
+    }
+  } catch {
+    // gugur ke fallback di bawah
   }
-  if (!data || data.length === 0) {
-    throw new Error("Tiada rekod pelajar untuk ID DELIMA ini.");
+
+  // Fallback: snapshot daripada log masuk
+  if (session?.student) {
+    return session.student as StudentRow;
   }
-  return data[0] as StudentRow;
+  throw new Error("Tiada rekod pelajar untuk ID DELIMA ini.");
 }
 
 /**

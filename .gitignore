@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-ssr
+.env
+.env.local
+.env.production.local
+.env.development.local
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+.vscode-test
+*.local
+
+# Data DELIMA sensitif (berisi kata laluan pelajar) - JANGAN commit
+*.xlsx

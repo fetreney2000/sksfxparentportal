@@ -35,7 +35,7 @@ const changeCredsSchema = z
       .max(64, "Nama pengguna terlalu panjang"),
     new_password: z
       .string()
-      .min(8, bm.settings.passwordMin)
+      .min(6, bm.settings.passwordMin)
       .max(128, "Kata laluan terlalu panjang"),
     confirm_password: z.string(),
   })

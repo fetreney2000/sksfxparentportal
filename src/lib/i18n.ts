@@ -48,7 +48,7 @@ export const bm = {
     newUsername: "Nama Pengguna Baharu",
     newPassword: "Kata Laluan Baharu",
     confirmPassword: "Sahkan Kata Laluan Baharu",
-    passwordMin: "Kata laluan baharu sekurang-kurangnya 8 aksara",
+    passwordMin: "Kata laluan baharu sekurang-kurangnya 6 aksara",
     passwordMismatch: "Kata laluan baharu tidak sepadan",
     currentRequired: "Kata laluan semasa wajib diisi",
     usernameRequired: "Nama pengguna baharu wajib diisi",

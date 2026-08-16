@@ -63,3 +63,32 @@ export async function signInGuardian(
 export function signOut(): void {
   useAuthStore.getState().clear();
 }
+
+/**
+ * Sahkan token sesi pada permulaan aplikasi.
+ * Mengembalikan true jika token masih sah, false jika tamat tempoh/rosak.
+ */
+export async function validateSession(token: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc("validate_session", {
+      p_token: token,
+    });
+    if (error) return false;
+    return Boolean(data && data.ok);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Semak sama ada ralat daripada Supabase menandakan sesi tidak sah
+ * (token tamat tempoh / rosak). Jika ya, kosongkan sesi supaya app
+ * mengalihkan pengguna ke halaman log masuk.
+ */
+export function handleInvalidSession(error: unknown): void {
+  const code = (error as { code?: string } | null)?.code;
+  const message = error instanceof Error ? error.message : String(error);
+  if (code === "P0001" && message.includes("Sesi")) {
+    useAuthStore.getState().clear();
+  }
+}

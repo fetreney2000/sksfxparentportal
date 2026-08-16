@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useAuthStore } from "@/stores/authStore";
+import { handleInvalidSession } from "@/features/auth/api";
 import type { DelimaFormValues } from "./types";
 
 export interface StudentRow extends DelimaFormValues {
@@ -31,6 +32,14 @@ function authError(): never {
 }
 
 /**
+ * Lempar ralat RPC; jika ralat menandakan sesi tidak sah, kosongkan sesi.
+ */
+function rpcError(error: unknown): never {
+  handleInvalidSession(error);
+  throw error instanceof Error ? error : new Error(String(error));
+}
+
+/**
  * Ibu bapa: dapatkan maklumat pelajar sendiri (token guardian / delima_id).
  */
 export async function fetchGuardianStudent(): Promise<StudentRow> {
@@ -38,6 +47,7 @@ export async function fetchGuardianStudent(): Promise<StudentRow> {
   if (!token) authError();
   const { data, error } = await supabase.rpc("get_guardian_student", { p_token: token });
   if (error) {
+    handleInvalidSession(error);
     throw new Error(`get_guardian_student: ${error.message} (${error.code ?? "?"})`);
   }
   if (!data || data.length === 0) {
@@ -53,7 +63,7 @@ export async function fetchAllDelima(): Promise<StudentRow[]> {
   const token = getToken();
   if (!token) authError();
   const { data, error } = await supabase.rpc("list_students_admin", { p_token: token });
-  if (error) throw new Error(error.message);
+  if (error) rpcError(error);
   return (data ?? []) as StudentRow[];
 }
 
@@ -64,7 +74,7 @@ export async function fetchExistingDelimaIds(): Promise<Set<string>> {
   const token = getToken();
   if (!token) authError();
   const { data, error } = await supabase.rpc("list_student_ids_admin", { p_token: token });
-  if (error) throw new Error(error.message);
+  if (error) rpcError(error);
   return new Set((data ?? []).map((v: unknown) => String(v)));
 }
 
@@ -80,7 +90,7 @@ export async function createDelima(values: DelimaFormValues): Promise<void> {
     p_nama: values.nama,
     p_kata_laluan: values.kata_laluan,
   });
-  if (error) throw new Error(error.message);
+  if (error) rpcError(error);
 }
 
 /**
@@ -99,7 +109,7 @@ export async function updateDelima(
     p_nama: values.nama,
     p_kata_laluan: values.kata_laluan,
   });
-  if (error) throw new Error(error.message);
+  if (error) rpcError(error);
 }
 
 /**
@@ -112,7 +122,7 @@ export async function deleteDelima(id: string): Promise<void> {
     p_token: token,
     p_id: id,
   });
-  if (error) throw new Error(error.message);
+  if (error) rpcError(error);
 }
 
 /**
@@ -129,7 +139,7 @@ export async function batchUpsertDelima(
     p_rows: rows,
     p_conflict: conflictStrategy,
   });
-  if (error) throw new Error(error.message);
+  if (error) rpcError(error);
   const ok = data && typeof data === "object" && "success" in data
     ? (data as { success: number; failed: number; errors?: unknown[] })
     : { success: 0, failed: 0, errors: [] };
@@ -172,7 +182,7 @@ export async function logImport(params: {
     p_failed: params.failedRows,
     p_error: params.errorDetail ?? null,
   });
-  if (error) throw new Error(error.message);
+  if (error) rpcError(error);
 }
 
 /**
@@ -184,6 +194,6 @@ export async function fetchImportLogs(): Promise<ImportLogRow[]> {
   const { data, error } = await supabase.rpc("list_import_logs_admin", {
     p_token: token,
   });
-  if (error) throw new Error(error.message);
+  if (error) rpcError(error);
   return (data ?? []) as ImportLogRow[];
 }

@@ -2,6 +2,8 @@ import { NavLink, type NavLinkProps } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/common/BrandLogo";
+import { bm } from "@/lib/i18n";
 import type { ComponentType } from "react";
 
 export interface NavItem {
@@ -37,10 +39,8 @@ export function AppSidebar({ items, open, onClose }: AppSidebarProps) {
       >
         <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-black text-primary-foreground">
-              SFXK
-            </div>
-            <p className="truncate text-sm font-semibold">Portal SFXK</p>
+            <BrandLogo size="h-8 w-8" className="rounded-md" />
+            <p className="truncate text-sm font-semibold">{bm.app.name}</p>
           </div>
           <Button
             variant="ghost"

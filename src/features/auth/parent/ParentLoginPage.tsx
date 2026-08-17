@@ -22,11 +22,18 @@ export function ParentLoginPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center bg-gradient-to-b from-background to-accent/30 p-4">
       <div className="mb-6 text-center">
-        <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-2xl font-black text-primary-foreground shadow-md">
-          SFXK
+        <div className="mx-auto mb-3 w-24 rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5">
+          <img
+            src="/logo.png"
+            alt={bm.app.name}
+            draggable={false}
+            className="mx-auto h-full w-full object-contain"
+          />
         </div>
         <h1 className="text-lg font-bold tracking-tight">{bm.app.name}</h1>
-        <p className="text-xs text-muted-foreground">{bm.app.tagline}</p>
+        <p className="mx-auto max-w-md text-xs text-muted-foreground">
+          {bm.app.tagline}
+        </p>
       </div>
 
       <Card className="w-full max-w-md">
@@ -72,7 +79,8 @@ export function ParentLoginPage() {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                ID DELIMA anda tercetak pada surat/borang yang dihantar oleh pihak sekolah.
+                ID DELIMA anda telah diberikan oleh guru kelas. Jika belum ada,
+                sila hubungi guru kelas masing-masing.
               </p>
             </div>
 
@@ -98,6 +106,10 @@ export function ParentLoginPage() {
           </form>
         </CardContent>
       </Card>
+
+      <p className="mx-auto mt-6 max-w-md text-center text-[10px] leading-relaxed text-muted-foreground">
+        {bm.app.disclaimer}
+      </p>
     </div>
   );
 }

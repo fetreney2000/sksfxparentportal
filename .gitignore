@@ -15,3 +15,4 @@ dist-ssr
 
 # Data DELIMA sensitif (berisi kata laluan pelajar) - JANGAN commit
 *.xlsx
+LogoSFX.jpg

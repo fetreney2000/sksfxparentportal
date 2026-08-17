@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { bm } from "@/lib/i18n";
 import { ParentLayout } from "@/components/layout/ParentLayout";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
@@ -53,12 +54,20 @@ function RoleSelectPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center bg-gradient-to-b from-background to-accent/30 p-4">
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary text-2xl font-black text-primary-foreground shadow-md">
-          SFXK
+        <div className="mx-auto mb-4 w-28 rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5">
+          <img
+            src="/logo.png"
+            alt={bm.app.name}
+            draggable={false}
+            className="mx-auto h-full w-full object-contain"
+          />
         </div>
-        <h1 className="text-xl font-bold">SK ST. FRANCIS XAVIER KENINGAU</h1>
-        <p className="text-sm text-muted-foreground">
-          Portal Ibu Bapa & Pentadbir
+        <h1 className="text-xl font-bold">{bm.app.name}</h1>
+        <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+          {bm.app.tagline}
+        </p>
+        <p className="mx-auto mt-1 text-xs font-medium text-muted-foreground/70">
+          SK St. Francis Xavier Keningau
         </p>
       </div>
       <div className="grid w-full max-w-md gap-3 sm:grid-cols-2">
@@ -81,6 +90,10 @@ function RoleSelectPage() {
           </p>
         </a>
       </div>
+
+      <p className="mx-auto mt-8 max-w-md text-center text-[10px] leading-relaxed text-muted-foreground">
+        {bm.app.disclaimer}
+      </p>
     </div>
   );
 }

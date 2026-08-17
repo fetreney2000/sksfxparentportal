@@ -10,15 +10,16 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "icons/icon-192.png", "icons/icon-512.png"],
+      includeAssets: ["favicon.png", "logo.png", "icons/icon-192.png", "icons/icon-512.png"],
       manifest: {
-        name: "Portal Ibu Bapa SK St. Francis Xavier Keningau",
-        short_name: "Portal SFXK",
+        name: "PassDELIMa",
+        short_name: "PassDELIMa",
         description:
-          "Portal untuk ibu bapa/penjaga melihat maklumat pelajar SK St. Francis Xavier Keningau",
+          "Portal untuk kemudahan ibu bapa/penjaga melihat maklumat DELIMa anak jagaan masing-masing di SK St. Francis Xavier Keningau",
         theme_color: "#a3e635",
         background_color: "#f7fdf7",
         display: "standalone",
+        lang: "ms",
         start_url: "/",
         scope: "/",
         icons: [

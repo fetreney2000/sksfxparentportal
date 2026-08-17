@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuthStore } from "@/stores/authStore";
 import { signOut } from "@/features/auth/api";
+import { BrandLogo } from "@/components/common/BrandLogo";
 import { bm } from "@/lib/i18n";
 
 interface AppHeaderProps {
@@ -47,15 +48,13 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
         <Menu className="h-5 w-5" />
       </Button>
       <div className="flex flex-1 items-center gap-2 min-w-0">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-black text-primary-foreground">
-          SFXK
-        </div>
+        <BrandLogo size="h-9 w-9" className="rounded-md" />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold leading-tight">
-            SK ST. FRANCIS XAVIER KENINGAU
+            {bm.app.name}
           </p>
           <p className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
-            {bm.app.shortName}
+            SK St. Francis Xavier Keningau
           </p>
         </div>
       </div>

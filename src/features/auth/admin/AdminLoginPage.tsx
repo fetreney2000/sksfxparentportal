@@ -15,7 +15,6 @@ import { bm } from "@/lib/i18n";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { isSupabaseConfigured } from "@/lib/supabaseClient";
 import { PasswordInput } from "@/components/common/PasswordInput";
-
 export function AdminLoginPage() {
   const { login, isLoading, error } = useAdminAuth();
   const [username, setUsername] = useState("");
@@ -24,8 +23,13 @@ export function AdminLoginPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center bg-gradient-to-b from-background to-accent/30 p-4">
       <div className="mb-6 text-center">
-        <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-2xl font-black text-secondary-foreground shadow-md">
-          SFXK
+        <div className="mx-auto mb-3 w-24 rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5">
+          <img
+            src="/logo.png"
+            alt={bm.app.name}
+            draggable={false}
+            className="mx-auto h-full w-full object-contain"
+          />
         </div>
         <h1 className="text-lg font-bold tracking-tight">{bm.app.name}</h1>
         <p className="text-xs text-muted-foreground">{bm.app.tagline}</p>
@@ -99,6 +103,10 @@ export function AdminLoginPage() {
           </form>
         </CardContent>
       </Card>
+
+      <p className="mx-auto mt-6 max-w-md text-center text-[10px] leading-relaxed text-muted-foreground">
+        {bm.app.disclaimer}
+      </p>
     </div>
   );
 }

@@ -4,9 +4,12 @@
  */
 export const bm = {
   app: {
-    name: "Portal Ibu Bapa SK St. Francis Xavier Keningau",
-    shortName: "Portal SFXK",
-    tagline: "Portal rasmi ibu bapa & penjaga",
+    name: "PassDELIMa",
+    shortName: "PassDELIMa",
+    tagline:
+      "Portal untuk kemudahan ibu bapa/penjaga untuk mencari maklumat DELIMa anak jagaan masing-masing",
+    disclaimer:
+      "Sila gunakan aplikasi ini dengan bijak. Setiap data dilindungi di bawah Akta Perlindungan Data Peribadi 2010 (Akta 709).",
   },
   auth: {
     login: "Log Masuk",

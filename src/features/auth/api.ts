@@ -18,7 +18,7 @@ interface AuthOk<T extends AppRole = AppRole> {
 export async function signInAdmin(
   username: string,
   password: string
-): Promise<AuthFail | AuthOk<"admin">> {
+): Promise<AuthFail | AuthOk<AppRole>> {
   const { data, error } = await supabase.rpc("authenticate_admin", {
     p_username: username,
     p_password: password,
@@ -26,13 +26,14 @@ export async function signInAdmin(
   if (error || !data || !data.ok) {
     return { ok: false, error: data?.error ?? "Nama pengguna atau kata laluan salah." };
   }
+  const role: AppRole = data.role === "viewer" ? "viewer" : "admin";
   useAuthStore.getState().setSession({
     token: data.token,
-    role: "admin",
+    role,
     username: data.username,
     name: data.name,
   });
-  return { ok: true, role: "admin" };
+  return { ok: true, role };
 }
 
 /**

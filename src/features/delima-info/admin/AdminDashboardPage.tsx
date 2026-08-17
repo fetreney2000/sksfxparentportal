@@ -2,11 +2,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { IdCard, Users, History } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useDelimaList } from "../queries";
+import { useAuthStore } from "@/stores/authStore";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { bm } from "@/lib/i18n";
 
 export function AdminDashboardPage() {
   const { data, isLoading } = useDelimaList();
+  const isAdmin = useAuthStore((s) => s.isAdmin)();
   const list = data ?? [];
 
   return (
@@ -37,22 +39,24 @@ export function AdminDashboardPage() {
             </Card>
           </Link>
 
-          <Link to="/admin/import-history" className="block">
-            <Card className="transition-shadow hover:shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {bm.nav.importHistory}
-                </CardTitle>
-                <History className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  <IdCard className="inline h-5 w-5 text-primary" />
-                </div>
-                <CardDescription>Lihat log import</CardDescription>
-              </CardContent>
-            </Card>
-          </Link>
+          {isAdmin && (
+            <Link to="/admin/import-history" className="block">
+              <Card className="transition-shadow hover:shadow-md">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {bm.nav.importHistory}
+                  </CardTitle>
+                  <History className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    <IdCard className="inline h-5 w-5 text-primary" />
+                  </div>
+                  <CardDescription>Lihat log import</CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
         </div>
       )}
     </div>

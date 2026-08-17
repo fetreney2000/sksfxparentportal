@@ -1,22 +1,36 @@
 -- =====================================================================
--- SEED DATA untuk Portal Ibu Bapa SK St. Francis Xavier Keningau
+-- SEED DATA untuk Portal Ibu Bapa PassDELIMa
 --
 -- UNTUK PENGGUNAAN TEMPATAN / PEMBANGUNAN SAHAJA.
 -- TIDAK UNTUK DIJALANKAN DALAM PRODUKSI tanpa menukar kata laluan.
 --
--- Kandungan: hanya akaun admin lalai.
+-- Kandungan: akaun admin lalai + akaun penonton (viewer).
 -- Data pelajar/guardian TIDAK di-seed — ibu bapa log masuk menggunakan
 -- delima_id dan data pelajar ditambah melalui import Excel oleh admin.
 -- =====================================================================
 
--- Akaun admin lalai
--- Username: admin
--- Password: admin123
--- Password disimpan sebagai hash (pgcrypto crypt) - JANGAN simpan plaintext.
-insert into public.admins (username, password_hash, nama)
+-- Akaun admin lalai (peranan penuh)
+-- Username: kartini
+-- Password: 515586
+insert into public.admins (username, password_hash, nama, role)
 values (
-  'admin',
-  crypt('admin123', gen_salt('bf')),
-  'Pentadbir Sekolah'
+  'kartini',
+  crypt('515586', gen_salt('bf')),
+  'Pentadbir Sekolah',
+  'admin'
 )
 on conflict (username) do nothing;
+
+-- Akaun penonton (baca-sahaja) — boleh lihat ID DELIMA tetapi tidak
+-- boleh CRUD, tidak boleh lihat Tetapan, dan tidak boleh tukar kredensial.
+-- Username: gurusfx
+-- Password: sksfx1043
+insert into public.admins (username, password_hash, nama, role)
+values (
+  'gurusfx',
+  crypt('sksfx1043', gen_salt('bf')),
+  'Guru SFX',
+  'viewer'
+)
+on conflict (username) do nothing;
+

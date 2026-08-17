@@ -19,7 +19,10 @@ export function useAdminAuth() {
           setError(result.error);
           return { ok: false, error: result.error };
         }
-        navigate("/admin", { replace: true });
+        // Penonton (viewer) dibawa terus ke senarai ID DELIMA
+        navigate(result.role === "viewer" ? "/admin/delima-info" : "/admin", {
+          replace: true,
+        });
         return { ok: true };
       } finally {
         setIsLoading(false);

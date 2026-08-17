@@ -41,8 +41,22 @@ export function AppRouter() {
       >
         <Route index element={<AdminDashboardPage />} />
         <Route path="delima-info" element={<AdminDelimaListPage />} />
-        <Route path="import-history" element={<ImportHistoryPage />} />
-        <Route path="settings" element={<AdminSettingsPage />} />
+        <Route
+          path="import-history"
+          element={
+            <ProtectedRoute role="admin" full>
+              <ImportHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <ProtectedRoute role="admin" full>
+              <AdminSettingsPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

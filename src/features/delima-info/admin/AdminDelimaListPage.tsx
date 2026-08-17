@@ -43,10 +43,12 @@ import { createDelimaColumns } from "./columns";
 import { useDeleteDelima, useDelimaList, type DelimaRow } from "../queries";
 import { DelimaFormDialog } from "./DelimaFormDialog";
 import { DelimaImportDialog } from "./DelimaImportDialog";
+import { useAuthStore } from "@/stores/authStore";
 
 export function AdminDelimaListPage() {
   const { data, isLoading, isError, refetch } = useDelimaList();
   const deleteMut = useDeleteDelima();
+  const canManage = useAuthStore((s) => s.isAdmin)();
 
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -66,8 +68,9 @@ export function AdminDelimaListPage() {
           setFormOpen(true);
         },
         onDelete: (r) => setToDelete(r),
+        canManage,
       }),
-    []
+    [canManage]
   );
 
   const table = useReactTable({
@@ -123,17 +126,21 @@ export function AdminDelimaListPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)}>
-            <FileSpreadsheet className="h-4 w-4" /> {bm.common.import}
-          </Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> {bm.common.add}
-          </Button>
+          {canManage && (
+            <>
+              <Button variant="outline" onClick={() => setImportOpen(true)}>
+                <FileSpreadsheet className="h-4 w-4" /> {bm.common.import}
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditing(null);
+                  setFormOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" /> {bm.common.add}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

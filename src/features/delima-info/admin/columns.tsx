@@ -16,6 +16,8 @@ import { bm } from "@/lib/i18n";
 interface CreateColumnsArgs {
   onEdit: (row: DelimaRow) => void;
   onDelete: (row: DelimaRow) => void;
+  /** false = tidak papar lajur tindakan (paparan baca-sahaja) */
+  canManage?: boolean;
 }
 
 function PasswordCell({ value }: { value: string }) {
@@ -42,6 +44,7 @@ function PasswordCell({ value }: { value: string }) {
 export function createDelimaColumns({
   onEdit,
   onDelete,
+  canManage = true,
 }: CreateColumnsArgs): ColumnDef<DelimaRow>[] {
   return [
     {
@@ -82,35 +85,39 @@ export function createDelimaColumns({
       cell: ({ row }) => <PasswordCell value={row.getValue("kata_laluan")} />,
       enableSorting: false,
     },
-    {
-      id: "actions",
-      enableHiding: false,
-      header: () => <span className="sr-only">{bm.common.actions}</span>,
-      cell: ({ row }) => {
-        const r = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={bm.common.actions}>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{bm.common.actions}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onEdit(r)}>
-                <Pencil className="h-4 w-4" /> {bm.common.edit}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onDelete(r)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" /> {bm.common.delete}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
+    ...(canManage
+      ? [
+          {
+            id: "actions",
+            enableHiding: false,
+            header: () => <span className="sr-only">{bm.common.actions}</span>,
+            cell: ({ row }: { row: { original: DelimaRow } }) => {
+              const r = row.original;
+              return (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={bm.common.actions}>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{bm.common.actions}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onEdit(r)}>
+                      <Pencil className="h-4 w-4" /> {bm.common.edit}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete(r)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" /> {bm.common.delete}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              );
+            },
+          },
+        ]
+      : []),
   ];
 }

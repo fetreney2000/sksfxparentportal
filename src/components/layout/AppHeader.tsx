@@ -20,17 +20,17 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ onMenuClick }: AppHeaderProps) {
-  const { session, isAdmin, isGuardian } = useAuthStore();
+  const { session, isAdmin, isStaff, isGuardian } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
   const logout = () => {
     signOut();
-    const target = isAdmin() ? "/admin/login" : "/login";
+    const target = isStaff() ? "/admin/login" : "/login";
     navigate(target, { replace: true });
   };
 
-  const identity = isAdmin()
+  const identity = isStaff()
     ? session?.username ?? "Pentadbir"
     : session?.delimaId ?? "Ibu Bapa";
 
@@ -72,7 +72,11 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {isAdmin() ? "Pentadbir" : "Ibu Bapa / Penjaga"}
+                {isGuardian()
+                  ? "Ibu Bapa / Penjaga"
+                  : isAdmin()
+                  ? "Pentadbir"
+                  : "Penonton (Baca Sahaja)"}
               </p>
               <p className="text-xs leading-none text-muted-foreground truncate">
                 {isGuardian() ? `ID: ${identity}` : identity}

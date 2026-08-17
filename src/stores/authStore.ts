@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { StudentRow } from "@/features/delima-info/api";
 
-export type AppRole = "guardian" | "admin";
+export type AppRole = "guardian" | "admin" | "viewer";
 
 export interface AppSession {
   token: string;
@@ -24,7 +24,10 @@ export interface AuthState {
   clear: () => void;
   updateUsername: (username: string) => void;
 
+  /** Pentadbir penuh (boleh CRUD / Tetapan) */
   isAdmin: () => boolean;
+  /** Mana-mana akaun staf admin (pentadbir penuh ATAU penonton) */
+  isStaff: () => boolean;
   isGuardian: () => boolean;
   getToken: () => string | null;
 }
@@ -52,6 +55,10 @@ export const useAuthStore = create<AuthState>()(
         ),
 
       isAdmin: () => get().session?.role === "admin",
+      isStaff: () => {
+        const role = get().session?.role;
+        return role === "admin" || role === "viewer";
+      },
       isGuardian: () => get().session?.role === "guardian",
       getToken: () => get().session?.token ?? null,
     }),

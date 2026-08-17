@@ -1,8 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { bm } from "@/lib/i18n";
 import { ParentLayout } from "@/components/layout/ParentLayout";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { useAuthStore } from "@/stores/authStore";
 import { ParentLoginPage } from "@/features/auth/parent/ParentLoginPage";
 import { AdminLoginPage } from "@/features/auth/admin/AdminLoginPage";
 import { AdminSettingsPage } from "@/features/auth/admin/AdminSettingsPage";
@@ -14,8 +15,8 @@ import { ImportHistoryPage } from "@/features/delima-info/admin/ImportHistoryPag
 export function AppRouter() {
   return (
     <Routes>
-      {/* Default route — pilih role */}
-      <Route path="/" element={<RoleSelectPage />} />
+      {/* Akar — alihkan automatik mengikut status log masuk */}
+      <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<ParentLoginPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
 
@@ -64,52 +65,25 @@ export function AppRouter() {
   );
 }
 
-function RoleSelectPage() {
-  return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-gradient-to-b from-background to-accent/30 p-4">
-      <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 w-28 rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5">
-          <img
-            src="/logo.png"
-            alt={bm.app.name}
-            draggable={false}
-            className="mx-auto h-full w-full object-contain"
-          />
-        </div>
-        <h1 className="text-xl font-bold">{bm.app.name}</h1>
-        <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-          {bm.app.tagline}
-        </p>
-        <p className="mx-auto mt-1 text-xs font-medium text-muted-foreground/70">
-          SK St. Francis Xavier Keningau
-        </p>
-      </div>
-      <div className="grid w-full max-w-md gap-3 sm:grid-cols-2">
-        <a
-          href="/login"
-          className="rounded-lg border bg-card p-5 text-card-foreground shadow-sm transition-shadow hover:shadow-md"
-        >
-          <p className="text-base font-semibold">Ibu Bapa / Penjaga</p>
-          <p className="text-xs text-muted-foreground">
-            Log masuk dengan ID DELIMA anak anda
-          </p>
-        </a>
-        <a
-          href="/admin/login"
-          className="rounded-lg border bg-card p-5 text-card-foreground shadow-sm transition-shadow hover:shadow-md"
-        >
-          <p className="text-base font-semibold">Pentadbir</p>
-          <p className="text-xs text-muted-foreground">
-            Log masuk dengan nama pengguna
-          </p>
-        </a>
-      </div>
+/**
+ * Alihan akar: pengguna yang log masuk terus ke portal masing-masing,
+ * pelawat dihantar ke halaman log masuk ibu bapa.
+ */
+function RootRedirect() {
+  const status = useAuthStore((s) => s.status);
+  const role = useAuthStore((s) => s.session?.role);
 
-      <p className="mx-auto mt-8 max-w-md text-center text-[10px] leading-relaxed text-muted-foreground">
-        {bm.app.disclaimer}
-      </p>
-    </div>
-  );
+  if (status === "loading") {
+    return <LoadingSpinner />;
+  }
+
+  if (role === "admin" || role === "viewer") {
+    return <Navigate to="/admin/delima-info" replace />;
+  }
+  if (role === "guardian") {
+    return <Navigate to="/portal/delima-info" replace />;
+  }
+  return <Navigate to="/login" replace />;
 }
 
 function NotFoundPage() {

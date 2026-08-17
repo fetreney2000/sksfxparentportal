@@ -37,7 +37,7 @@ export function AdminLoginPage() {
 
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Pentadbir · {bm.auth.login}</CardTitle>
+          <CardTitle>Guru · {bm.auth.login}</CardTitle>
           <CardDescription>{bm.auth.adminLoginSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>

@@ -22,7 +22,7 @@ export const bm = {
     emailNotRegistered:
       "E-mel tidak dijumpai dalam rekod sekolah. Sila hubungi pihak sekolah.",
     adminLoginSubtitle:
-      "Log masuk sebagai pentadbir untuk mengurus maklumat portal.",
+      "Log masuk sebagai guru untuk mengurus maklumat portal.",
   },
   nav: {
     dashboard: "Papan Pemuka",
